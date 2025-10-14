@@ -1,0 +1,11 @@
+(executable
+ (name bench)
+ (public_name patricia-tree-benchmarks)
+ (libraries
+  bechamel
+  notty.unix
+  bechamel-notty
+  qcheck
+  ptmap
+  containers-data
+  patricia-tree))

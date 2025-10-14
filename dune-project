@@ -1,0 +1,18 @@
+(lang dune 3.20)
+(name patricia-tree-benchmarks)
+(version dev)
+(generate_opam_files)
+(authors "Nicolas Osborne <nicolas.osborne@tarides.com"  "Jules Aguillon <jules@j3s.fr>")
+(source (github tarides/patricia-tree-benchmarks))
+(license MIT)
+
+(package
+ (name patricia-tree-benchmarks)
+ (depends
+  bechamel
+  notty
+  bechamel-notty
+  qcheck
+  ptmap
+  containers-data
+  patricia-tree))
