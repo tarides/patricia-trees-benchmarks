@@ -6,7 +6,13 @@ let benchmark () =
   let cfg =
     Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
   in
-  Benchmark.all cfg instances Tests.tests
+  let results = Hashtbl.create 32 in
+  List.iter
+    (fun tests ->
+      let r = Benchmark.all cfg instances tests in
+      Hashtbl.replace_seq results (Hashtbl.to_seq r))
+    Tests.tests;
+  results
 
 let analyze results =
   let ols =

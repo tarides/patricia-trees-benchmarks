@@ -1,28 +1,37 @@
-open Bechamel
+module Ptmap_bench = Data.Make (struct
+  type kv = int * string
+  type t = string Ptmap.t
 
-module PatT = PatriciaTree.MakeMap (struct
-  type t = int
-
-  let to_int = Fun.id
+  let make_kv kv = kv
+  let name = "Ptmap"
+  let of_seq = Some Ptmap.of_seq
 end)
 
-let pt_random_key_value_seq =
-  let aux (k, v) = PatT.BaseMap.(KeyValue (k, Snd v)) in
-  List.(to_seq @@ map aux Data.random_key_value_list)
+module CCIntMap_bench = Data.Make (struct
+  type kv = int * string
+  type t = string CCIntMap.t
 
-let make_test name call = Test.make ~name (Staged.stage @@ call)
+  let make_kv kv = kv
+  let name = "CCIntMap"
+  let of_seq = Some CCIntMap.of_seq
+end)
 
-let test_ptmap_of_seq =
-  make_test "Ptmap.of_seq" @@ fun () -> Ptmap.of_seq Data.random_key_value_seq
+module PatriciaTree_bench = Data.Make (struct
+  module PatT = PatriciaTree.MakeMap (struct
+    type t = int
 
-let test_containers_of_seq =
-  make_test "CCIntMap.of_seq" @@ fun () ->
-  CCIntMap.of_seq Data.random_key_value_seq
+    let to_int = Fun.id
+  end)
 
-let test_patricia_tree_of_seq =
-  make_test "Patricia_tree.of_seq" @@ fun () ->
-  PatT.BaseMap.of_seq pt_random_key_value_seq
+  module M = PatT.BaseMap
+
+  type kv = string M.key_value_pair
+  type t = string M.t
+
+  let make_kv (k, v) = M.(KeyValue (k, Snd v))
+  let name = "PatriciaTree"
+  let of_seq = Some M.of_seq
+end)
 
 let tests =
-  Test.make_grouped ~name:"building patrica trees" ~fmt:"%s %s"
-    [ test_ptmap_of_seq; test_containers_of_seq; test_patricia_tree_of_seq ]
+  [ Ptmap_bench.tests; CCIntMap_bench.tests; PatriciaTree_bench.tests ]
