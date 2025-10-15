@@ -62,5 +62,47 @@ module PatriciaTree_bench = Bench.Make (struct
   let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
 end)
 
+module Colibri_intmap_bench = Bench.Make (struct
+  open Popop_lib
+
+  module Key = struct
+    type t = int
+
+    let tag = Fun.id
+    let equal = Int.equal
+    let pp = Pp.int
+  end
+
+  module Data = struct
+    type t = string
+
+    let hash = String.hash
+    let equal = String.equal
+    let pp = Pp.string
+  end
+
+  module A = Intmap.Make (Key)
+  module M = A.Make (Data)
+
+  type kv = M.key * string
+  type t = string M.data M.t
+
+  let make_kv = Fun.id
+  let name = "Colibri2"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list = M.of_list
+  let of_seq _ = raise Bench.Unsupported
+  let union = M.union (fun _ a _ -> Some a)
+  let merge f = M.union_merge (fun k a b -> f k a (Some b))
+  let inter = M.inter (fun _ a _ -> Some a)
+  let diff = M.diff (fun _ a _ -> Some a)
+end)
+
 let tests =
-  [ Ptmap_bench.tests; CCIntMap_bench.tests; PatriciaTree_bench.tests ]
+  [
+    Ptmap_bench.tests;
+    CCIntMap_bench.tests;
+    PatriciaTree_bench.tests;
+    Colibri_intmap_bench.tests;
+  ]

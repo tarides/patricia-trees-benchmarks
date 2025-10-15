@@ -9,4 +9,5 @@
   qcheck
   ptmap
   containers-data
-  patricia-tree))
+  patricia-tree
+  popop_lib))

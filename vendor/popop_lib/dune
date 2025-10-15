@@ -6,5 +6,4 @@
   "Temporary for colibri2 (intended to be replaced by another library)")
  (libraries str unix zarith base fmt)
  (preprocess
-  (pps ppx_deriving.std ppx_hash))
-)
+  (pps ppx_deriving.std ppx_hash)))
