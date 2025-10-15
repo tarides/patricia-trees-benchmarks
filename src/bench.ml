@@ -1,42 +1,55 @@
-open Bechamel
-open Toolkit
+open QCheck
 
-let benchmark () =
-  let instances = Instance.[ monotonic_clock ] in
-  let cfg =
-    Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
-  in
-  let results = Hashtbl.create 32 in
-  List.iter
-    (fun tests ->
-      let r = Benchmark.all cfg instances tests in
-      Hashtbl.replace_seq results (Hashtbl.to_seq r))
-    Tests.tests;
-  results
+(** Pre-constructed test data. *)
 
-let analyze results =
-  let ols =
-    Analyze.ols ~bootstrap:0 ~r_square:true ~predictors:[| Measure.run |]
-  in
-  let results = Analyze.all ols Instance.monotonic_clock results in
-  Analyze.merge ols [ Instance.monotonic_clock ] [ results ]
+let state = Random.get_state ()
+let tree_size = 10000
+let value_size = 100
+let random_key_list = List.init tree_size (fun _ -> Gen.int state)
 
-let () =
-  Bechamel_notty.Unit.add Instance.monotonic_clock
-    (Measure.unit Instance.monotonic_clock)
+let random_value_list =
+  List.init tree_size (fun _ -> Gen.(string_size (return value_size) state))
 
-let img (window, results) =
-  Bechamel_notty.Multiple.image_of_ols_results ~rect:window
-    ~predictor:Measure.run results
+let random_key_value_list = List.combine random_key_list random_value_list
+let random_key_value_seq = List.to_seq random_key_value_list
 
-open Notty_unix
+(** Defines benchmarks for an abstract implementation. This ensures that the
+    output is consistent and the results are comparable. See the instances in
+    [tests.ml]. *)
+module Make (Impl : sig
+  type kv
+  (** Key and value pair *)
 
-let () =
-  let window =
-    match winsize Unix.stdout with
-    | Some (w, h) -> { Bechamel_notty.w; h }
-    | None -> { Bechamel_notty.w = 80; h = 1 }
-  in
-  let results = benchmark () in
-  let results = analyze results in
-  img (window, results) |> eol |> output_image
+  type t
+  (** Data structure with keys of type [int] and values of type [string]. *)
+
+  val make_kv : int * string -> kv
+  (** Pair a key and a value, for implementations that require wrapping the keys
+      and/or the values, for example for heterogeneous maps. *)
+
+  val name : string
+  (** Implementation name used to name benchmarks. *)
+
+  (** Operations that are measured. Operations that are not supported are equal
+      to [None]. *)
+
+  val of_seq : (kv Seq.t -> t) option
+end) : sig
+  val tests : Bechamel.Test.t
+end = struct
+  open Bechamel
+
+  let make_test name impl call =
+    match impl with
+    | Some impl -> Test.make ~name (Staged.stage @@ call impl)
+    | None ->
+        (* Use [make_indexed] with an empty list to show unsupported operations
+           in the output. *)
+        Test.make_indexed ~name ~fmt:"unsupported %s %d" ~args:[] (fun _ ->
+            assert false)
+
+  let random_kv_list = List.map Impl.make_kv random_key_value_list
+  let random_kv_seq = List.to_seq random_kv_list
+  let t_of_seq = make_test "of_seq" Impl.of_seq @@ fun f () -> f random_kv_seq
+  let tests = Test.make_grouped ~name:Impl.name ~fmt:"%s %s" [ t_of_seq ]
+end

@@ -1,5 +1,5 @@
 (executable
- (name bench)
+ (name main)
  (public_name patricia-tree-benchmarks)
  (libraries
   bechamel

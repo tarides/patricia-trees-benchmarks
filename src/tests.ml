@@ -1,4 +1,4 @@
-module Ptmap_bench = Data.Make (struct
+module Ptmap_bench = Bench.Make (struct
   type kv = int * string
   type t = string Ptmap.t
 
@@ -7,7 +7,7 @@ module Ptmap_bench = Data.Make (struct
   let of_seq = Some Ptmap.of_seq
 end)
 
-module CCIntMap_bench = Data.Make (struct
+module CCIntMap_bench = Bench.Make (struct
   type kv = int * string
   type t = string CCIntMap.t
 
@@ -16,7 +16,7 @@ module CCIntMap_bench = Data.Make (struct
   let of_seq = Some CCIntMap.of_seq
 end)
 
-module PatriciaTree_bench = Data.Make (struct
+module PatriciaTree_bench = Bench.Make (struct
   module PatT = PatriciaTree.MakeMap (struct
     type t = int
 
