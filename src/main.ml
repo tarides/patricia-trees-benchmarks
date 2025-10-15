@@ -5,14 +5,14 @@ open Toolkit
 let benchmark_all_with_unsupported cfg instances tests =
   let results = Hashtbl.create 32 in
   let tests = Test.elements tests in
+  let unsupported = ref [] in
   List.iter
     (fun test ->
-      try
-        Hashtbl.replace results (Test.Elt.name test)
-          (Benchmark.run cfg instances test)
-      with Bench.Unsupported -> ())
+      let name = Test.Elt.name test in
+      try Hashtbl.replace results name (Benchmark.run cfg instances test)
+      with Bench.Unsupported -> unsupported := name :: !unsupported)
     tests;
-  results
+  (results, !unsupported)
 
 let benchmark () =
   let instances = Instance.[ monotonic_clock ] in
@@ -51,8 +51,14 @@ let () =
   in
   let img =
     List.map
-      (fun (name, results) ->
-        I.string A.empty name <-> img (window, analyze results))
+      (fun (name, (results, unsupported)) ->
+        let unsupported =
+          if unsupported = [] then I.empty
+          else
+            I.hcat
+              (List.map (I.string A.empty) ("Unsupported by: " :: unsupported))
+        in
+        I.string A.empty name <-> img (window, analyze results) <-> unsupported)
       (benchmark ())
     |> I.vcat
   in

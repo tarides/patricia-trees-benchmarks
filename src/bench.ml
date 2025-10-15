@@ -49,7 +49,7 @@ end = struct
   open Bechamel
 
   let make_test op_name call =
-    let name = Impl.name ^ "." ^ op_name in
+    let name = Impl.name in
     { op_name; test = Test.make ~name (Staged.stage @@ call) }
 
   let random_kv_list = List.map Impl.make_kv random_key_value_list
