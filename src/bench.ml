@@ -1,5 +1,8 @@
 open QCheck
 
+exception Unsupported
+(** Raised by operations that are not supported by a given implementation. *)
+
 (** Pre-constructed test data. *)
 
 let state = Random.get_state ()
@@ -30,26 +33,26 @@ module Make (Impl : sig
   val name : string
   (** Implementation name used to name benchmarks. *)
 
-  (** Operations that are measured. Operations that are not supported are equal
-      to [None]. *)
+  val empty : t
 
-  val of_seq : (kv Seq.t -> t) option
+  (** Operations that are measured. Operations that are not supported raise
+      [Unsupported]. *)
+
+  val of_seq : kv Seq.t -> t
+  val add : t -> kv -> t
 end) : sig
   val tests : Bechamel.Test.t
 end = struct
   open Bechamel
 
-  let make_test name impl call =
-    match impl with
-    | Some impl -> Test.make ~name (Staged.stage @@ call impl)
-    | None ->
-        (* Use [make_indexed] with an empty list to show unsupported operations
-           in the output. *)
-        Test.make_indexed ~name ~fmt:"unsupported %s %d" ~args:[] (fun _ ->
-            assert false)
-
+  let make_test name call = Test.make ~name (Staged.stage @@ call)
   let random_kv_list = List.map Impl.make_kv random_key_value_list
   let random_kv_seq = List.to_seq random_kv_list
-  let t_of_seq = make_test "of_seq" Impl.of_seq @@ fun f () -> f random_kv_seq
-  let tests = Test.make_grouped ~name:Impl.name ~fmt:"%s %s" [ t_of_seq ]
+  let t_of_seq = make_test "of_seq" @@ fun () -> Impl.of_seq random_kv_seq
+
+  let t_add =
+    make_test "add" @@ fun () ->
+    List.fold_left Impl.add Impl.empty random_kv_list
+
+  let tests = Test.make_grouped ~name:Impl.name ~fmt:"%s %s" [ t_of_seq; t_add ]
 end

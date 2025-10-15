@@ -9,8 +9,14 @@ let benchmark () =
   let results = Hashtbl.create 32 in
   List.iter
     (fun tests ->
-      let r = Benchmark.all cfg instances tests in
-      Hashtbl.replace_seq results (Hashtbl.to_seq r))
+      let tests = Test.elements tests in
+      List.iter
+        (fun test ->
+          try
+            Hashtbl.replace results (Test.Elt.name test)
+              (Benchmark.run cfg instances test)
+          with Bench.Unsupported -> ())
+        tests)
     Tests.tests;
   results
 
