@@ -1,24 +1,28 @@
 open Bechamel
 open Toolkit
 
+(** Like [Benchmark.all] but handles unsupported operations. *)
+let benchmark_all_with_unsupported cfg instances tests =
+  let results = Hashtbl.create 32 in
+  let tests = Test.elements tests in
+  List.iter
+    (fun test ->
+      try
+        Hashtbl.replace results (Test.Elt.name test)
+          (Benchmark.run cfg instances test)
+      with Bench.Unsupported -> ())
+    tests;
+  results
+
 let benchmark () =
   let instances = Instance.[ monotonic_clock ] in
   let cfg =
     Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
   in
-  let results = Hashtbl.create 32 in
-  List.iter
-    (fun tests ->
-      let tests = Test.elements tests in
-      List.iter
-        (fun test ->
-          try
-            Hashtbl.replace results (Test.Elt.name test)
-              (Benchmark.run cfg instances test)
-          with Bench.Unsupported -> ())
-        tests)
-    Tests.tests;
-  results
+  List.map
+    (fun (name, tests) ->
+      (name, benchmark_all_with_unsupported cfg instances tests))
+    (Bench.merge Tests.tests)
 
 let analyze results =
   let ols =
@@ -38,11 +42,18 @@ let img (window, results) =
 open Notty_unix
 
 let () =
+  let open Notty in
+  let open Notty.Infix in
   let window =
     match winsize Unix.stdout with
     | Some (w, h) -> { Bechamel_notty.w; h }
     | None -> { Bechamel_notty.w = 80; h = 1 }
   in
-  let results = benchmark () in
-  let results = analyze results in
-  img (window, results) |> eol |> output_image
+  let img =
+    List.map
+      (fun (name, results) ->
+        I.string A.empty name <-> img (window, analyze results))
+      (benchmark ())
+    |> I.vcat
+  in
+  output_image img

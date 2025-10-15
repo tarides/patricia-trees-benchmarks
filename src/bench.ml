@@ -3,6 +3,9 @@ open QCheck
 exception Unsupported
 (** Raised by operations that are not supported by a given implementation. *)
 
+type t = { op_name : string; test : Bechamel.Test.t }
+(** Benchmarks defined by the functor [Make]. See {!merge} below. *)
+
 (** Pre-constructed test data. *)
 
 let state = Random.get_state ()
@@ -41,11 +44,14 @@ module Make (Impl : sig
   val of_seq : kv Seq.t -> t
   val add : t -> kv -> t
 end) : sig
-  val tests : Bechamel.Test.t
+  val tests : t list
 end = struct
   open Bechamel
 
-  let make_test name call = Test.make ~name (Staged.stage @@ call)
+  let make_test op_name call =
+    let name = Impl.name ^ "." ^ op_name in
+    { op_name; test = Test.make ~name (Staged.stage @@ call) }
+
   let random_kv_list = List.map Impl.make_kv random_key_value_list
   let random_kv_seq = List.to_seq random_kv_list
   let t_of_seq = make_test "of_seq" @@ fun () -> Impl.of_seq random_kv_seq
@@ -54,5 +60,27 @@ end = struct
     make_test "add" @@ fun () ->
     List.fold_left Impl.add Impl.empty random_kv_list
 
-  let tests = Test.make_grouped ~name:Impl.name ~fmt:"%s %s" [ t_of_seq; t_add ]
+  let tests = [ t_of_seq; t_add ]
 end
+
+(** Group tests defined in [Make] by operations to allow comparing the result.
+*)
+let merge : t list list -> (string * Bechamel.Test.t) list =
+ fun benchs ->
+  let module SMap = Map.Make (String) in
+  let by_op_name =
+    List.fold_left
+      (List.fold_left (fun acc test ->
+           SMap.add_to_list test.op_name test.test acc))
+      SMap.empty benchs
+  in
+  (* Use the first test list to keep the defined order. *)
+  match benchs with
+  | [] -> []
+  | hd :: _ ->
+      List.map
+        (fun { op_name; _ } ->
+          ( op_name,
+            Bechamel.Test.make_grouped ~name:"" ~fmt:"%s%s"
+              (SMap.find op_name by_op_name) ))
+        hd
