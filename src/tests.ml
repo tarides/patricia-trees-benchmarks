@@ -41,30 +41,25 @@ module CCIntMap_bench = Bench.Make (struct
 end)
 
 module PatriciaTree_bench = Bench.Make (struct
-  module PatT = PatriciaTree.MakeMap (struct
+  module M = PatriciaTree.MakeMap (struct
     type t = int
 
     let to_int = Fun.id
   end)
 
-  module M = PatT.BaseMap
-
-  type kv = string M.key_value_pair
+  type kv = int * string
   type t = string M.t
 
-  let make_kv (k, v) = M.(KeyValue (k, Snd v))
+  let make_kv kv = kv
   let name = "PatriciaTree"
   let empty = M.empty
-  let add t (M.KeyValue (k, v)) = M.add k v t
+  let add t (k, v) = M.add k v t
   let of_list = M.of_list
   let of_seq = M.of_seq
-  let polyunion : (_, _, _) M.polyunion = { M.f = (fun _ a _ -> a) }
-  let union a b = M.idempotent_union polyunion a b
-  let merge _ _ _ = raise Bench.Unsupported
-  let polyinter : (_, _, _) M.polyinter = { M.f = (fun _ a _ -> a) }
-  let inter a b = M.idempotent_inter polyinter a b
-  let polydiff : (_, _, _) M.polyinterfilter = { M.f = (fun _ _ _ -> None) }
-  let diff a b = M.symmetric_difference polydiff a b
+  let union a b = M.idempotent_union (fun _ a _ -> a) a b
+  let merge f a b = M.slow_merge f a b
+  let inter a b = M.idempotent_inter (fun _ a _ -> a) a b
+  let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
 end)
 
 let tests =
