@@ -1,6 +1,7 @@
 (executable
  (name main)
  (public_name patricia-tree-benchmarks)
+ (package patricia-tree-benchmarks)
  (libraries
   bechamel
   notty.unix
@@ -8,4 +9,5 @@
   qcheck
   ptmap
   containers-data
-  patricia-tree))
+  patricia-tree
+  popop_lib))

@@ -1,0 +1,9 @@
+; library to replace by containers
+
+(library
+ (name popop_lib)
+ (synopsis
+  "Temporary for colibri2 (intended to be replaced by another library)")
+ (libraries str unix zarith base fmt)
+ (preprocess
+  (pps ppx_deriving.std ppx_hash)))
