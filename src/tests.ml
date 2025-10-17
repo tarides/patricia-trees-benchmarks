@@ -99,6 +99,17 @@ module Colibri_intmap_bench = Bench.Make (struct
   let diff = M.diff (fun _ a _ -> Some a)
 end)
 
+module Framac_hptmap_bench = struct
+  open Fclib
+
+  module Key = struct
+    open Datatype
+
+
+  end
+
+end
+
 let tests =
   [
     Ptmap_bench.tests;

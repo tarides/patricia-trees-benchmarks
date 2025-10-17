@@ -10,4 +10,5 @@
   ptmap
   containers-data
   patricia-tree
-  popop_lib))
+  popop_lib
+  hptmap))
