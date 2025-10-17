@@ -217,7 +217,7 @@ module type S = sig
   include Shape with type key := key
   include Datatype.S_with_collections with type t = v map
 
-  val self : State.t
+  (* val self : State.t *)
 
   val empty : t
   (** the empty map *)
@@ -255,11 +255,11 @@ module type S = sig
   (** Same as [map], except if [f k v] returns [None]. In this case, [k] is not
       bound in the resulting map. *)
 
-  val cached_map :
-    cache:string * int ->
-    temporary:bool ->
-    f:(key -> v -> v) ->
-    t -> t
+  (* val cached_map : *)
+  (*   cache:string * int -> *)
+  (*   temporary:bool -> *)
+  (*   f:(key -> v -> v) -> *)
+  (*   t -> t *)
 
   val replace_key: decide:(key -> v -> v -> v) -> key map -> t -> bool * t
   (** [replace_key ~decide shape map] substitute keys in [map] according to

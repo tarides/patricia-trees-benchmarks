@@ -163,19 +163,20 @@ module Shape(Key: Id_Datatype) = struct
   *)
 
   let compare =
-    if Key.compare == Datatype.undefined
-    then begin
-      Cmdline.Kernel_log.debug
-        "%s shape, missing comparison function" (Type.name Key.ty);
-      Datatype.undefined
-    end
-    else compare_v
+    (* if Key.compare == Datatype.undefined *)
+    (* then begin *)
+    (*   Cmdline.Kernel_log.debug *)
+    (*     "%s shape, missing comparison function" (Type.name Key.ty); *)
+    (*   Datatype.undefined *)
+    (* end *)
+    (* else *) 
+      compare_v
 
-  let pretty pretty_value fmt tree =
-    Pretty_utils.pp_iter2
-      ~pre:"@[<v 3>{[ " ~suf:" ]}@]" ~sep:"@ " ~between:" -> "
-      iter Key.pretty (fun fmt v -> Format.fprintf fmt "@[%a@]" pretty_value v)
-      fmt tree
+  (* let pretty pretty_value fmt tree = *)
+  (*   Pretty_utils.pp_iter2 *)
+  (*     ~pre:"@[<v 3>{[ " ~suf:" ]}@]" ~sep:"@ " ~between:" -> " *)
+  (*     iter Key.pretty (fun fmt v -> Format.fprintf fmt "@[%a@]" pretty_value v) *)
+  (*     fmt tree *)
 
   let is_empty htr = match htr with
     | Empty ->
@@ -347,21 +348,21 @@ module Shape(Key: Id_Datatype) = struct
     | Hptmap_sig.PersistentCache _ -> true
     | _ -> false
 
-  let make_unary_cache (type v result) empty name cache =
-    match cache with
-    | Hptmap_sig.NoCache -> (fun f x -> f x)
-    | Hptmap_sig.TemporaryCache cache_name
-    | Hptmap_sig.PersistentCache cache_name ->
-      if debug_cache
-      then Format.eprintf "Hptmap CACHE %s : %s@." name cache_name;
-      let module Arg = Cacheable (struct type nonrec v = v end) in
-      let module R = struct
-        type t = result
-        let sentinel : t = empty
-      end in
-      let module Cache = Binary_cache.Arity_One (Arg) (R) in
-      if is_persistent_cache cache then register_clear_cache Cache.clear;
-      Cache.merge
+  (* let make_unary_cache (type v result) empty name cache = *)
+  (*   match cache with *)
+  (*   | Hptmap_sig.NoCache -> (fun f x -> f x) *)
+  (*   | Hptmap_sig.TemporaryCache cache_name *)
+  (*   | Hptmap_sig.PersistentCache cache_name -> *)
+  (*     if debug_cache *)
+  (*     then Format.eprintf "Hptmap CACHE %s : %s@." name cache_name; *)
+  (*     let module Arg = Cacheable (struct type nonrec v = v end) in *)
+  (*     let module R = struct *)
+  (*       type t = result *)
+  (*       let sentinel : t = empty *)
+  (*     end in *)
+  (*     let module Cache = Binary_cache.Arity_One (Arg) (R) in *)
+  (*     if is_persistent_cache cache then register_clear_cache Cache.clear; *)
+  (*     Cache.merge *)
 
   type ('v1, 'v2, 'result) cache_type =
     | Any: ('v1, 'v2, 'result) cache_type
@@ -369,105 +370,105 @@ module Shape(Key: Id_Datatype) = struct
     | Symmetric: ('v, 'v, 'result) cache_type
     | SymmetricPredicate: ('v, 'v, bool) cache_type
 
-  let make_binary_cache (type v1 v2 result)
-      ?(kind: (v1, v2, result) cache_type = Any) empty name cache =
-    match cache with
-    | Hptmap_sig.NoCache -> (fun f x y -> f x y)
-    | Hptmap_sig.TemporaryCache cache_name
-    | Hptmap_sig.PersistentCache cache_name ->
-      if debug_cache
-      then Format.eprintf "Hptmap CACHE %s: %s@." name cache_name;
-      let module Arg1 = Cacheable (struct type v = v1 end) in
-      let module Arg2 = Cacheable (struct type v = v2 end) in
-      let module R = struct
-        type t = result
-        let sentinel : t = empty
-      end in
-      let clear_cache, merge_cache =
-        match kind with
-        | Any ->
-          let module Cache = Binary_cache.Arity_Two (Arg1) (Arg2) (R) in
-          Cache.clear, Cache.merge
-        | Symmetric ->
-          let module Cache = Binary_cache.Symmetric_Binary (Arg1) (R) in
-          Cache.clear, Cache.merge
-        | Predicate ->
-          let module Cache = Binary_cache.Binary_Predicate (Arg1) (Arg2) in
-          Cache.clear, Cache.merge
-        | SymmetricPredicate ->
-          let module Cache = Binary_cache.Symmetric_Binary_Predicate (Arg1) in
-          Cache.clear, Cache.merge
-      in
-      if is_persistent_cache cache then register_clear_cache clear_cache;
-      merge_cache
+  (* let make_binary_cache (type v1 v2 result) *)
+  (*     ?(kind: (v1, v2, result) cache_type = Any) empty name cache = *)
+  (*   match cache with *)
+  (*   | Hptmap_sig.NoCache -> (fun f x y -> f x y) *)
+  (*   | Hptmap_sig.TemporaryCache cache_name *)
+  (*   | Hptmap_sig.PersistentCache cache_name -> *)
+  (*     if debug_cache *)
+  (*     then Format.eprintf "Hptmap CACHE %s: %s@." name cache_name; *)
+  (*     let module Arg1 = Cacheable (struct type v = v1 end) in *)
+  (*     let module Arg2 = Cacheable (struct type v = v2 end) in *)
+  (*     let module R = struct *)
+  (*       type t = result *)
+  (*       let sentinel : t = empty *)
+  (*     end in *)
+  (*     let clear_cache, merge_cache = *)
+  (*       match kind with *)
+  (*       | Any -> *)
+  (*         let module Cache = Binary_cache.Arity_Two (Arg1) (Arg2) (R) in *)
+  (*         Cache.clear, Cache.merge *)
+  (*       | Symmetric -> *)
+  (*         let module Cache = Binary_cache.Symmetric_Binary (Arg1) (R) in *)
+  (*         Cache.clear, Cache.merge *)
+  (*       | Predicate -> *)
+  (*         let module Cache = Binary_cache.Binary_Predicate (Arg1) (Arg2) in *)
+  (*         Cache.clear, Cache.merge *)
+  (*       | SymmetricPredicate -> *)
+  (*         let module Cache = Binary_cache.Symmetric_Binary_Predicate (Arg1) in *)
+  (*         Cache.clear, Cache.merge *)
+  (*     in *)
+  (*     if is_persistent_cache cache then register_clear_cache clear_cache; *)
+  (*     merge_cache *)
 
-  let cached_fold ~cache ~f ~joiner ~empty =
-    let cache_merge = make_unary_cache empty "cached_fold" cache in
-    let rec compute t = cache_merge traverse t
-    and traverse t =
-      match t with
-      | Empty -> empty
-      | Leaf (key, value, _) -> f key value
-      | Branch (_p, _m, s0, s1, _) -> joiner (compute s0) (compute s1)
-    in
-    compute
+  (* let cached_fold ~cache ~f ~joiner ~empty = *)
+  (*   let cache_merge = make_unary_cache empty "cached_fold" cache in *)
+  (*   let rec compute t = cache_merge traverse t *)
+  (*   and traverse t = *)
+  (*     match t with *)
+  (*     | Empty -> empty *)
+  (*     | Leaf (key, value, _) -> f key value *)
+  (*     | Branch (_p, _m, s0, s1, _) -> joiner (compute s0) (compute s1) *)
+  (*   in *)
+  (*   compute *)
 
-  let fold2_join_heterogeneous ~cache ~empty_left ~empty_right ~both ~join ~empty =
-    let cache_merge = make_binary_cache empty "fold2" cache in
-    let rec compute s t = cache_merge aux s t
-    and aux s t =
-      match s, t with
-      | Empty, Empty -> empty
-      | Empty, t -> empty_left t
-      | s, Empty -> empty_right s
+  (* let fold2_join_heterogeneous ~cache ~empty_left ~empty_right ~both ~join ~empty = *)
+  (*   (1* let cache_merge = make_binary_cache empty "fold2" cache in *1) *)
+  (*   let rec compute s t = cache_merge aux s t *)
+  (*   and aux s t = *)
+  (*     match s, t with *)
+  (*     | Empty, Empty -> empty *)
+  (*     | Empty, t -> empty_left t *)
+  (*     | s, Empty -> empty_right s *)
 
-      | Leaf (ks, vs, _), Leaf (kt, vt, _) ->
-        if Key.equal ks kt then
-          both ks vs vt
-        else
-          join (empty_left t) (empty_right s)
+  (*     | Leaf (ks, vs, _), Leaf (kt, vt, _) -> *)
+  (*       if Key.equal ks kt then *)
+  (*         both ks vs vt *)
+  (*       else *)
+  (*         join (empty_left t) (empty_right s) *)
 
-      | Branch (p, m, s0, s1, _), Leaf(kt, _, _) ->
-        let k_id = Key.id kt in
-        if match_prefix k_id p m then
-          if (k_id land m) = 0 then
-            join (compute s0 t) (empty_right s1)
-          else
-            join (compute s1 t) (empty_right s0)
-        else
-          join (empty_right s) (empty_left t)
+  (*     | Branch (p, m, s0, s1, _), Leaf(kt, _, _) -> *)
+  (*       let k_id = Key.id kt in *)
+  (*       if match_prefix k_id p m then *)
+  (*         if (k_id land m) = 0 then *)
+  (*           join (compute s0 t) (empty_right s1) *)
+  (*         else *)
+  (*           join (compute s1 t) (empty_right s0) *)
+  (*       else *)
+  (*         join (empty_right s) (empty_left t) *)
 
-      | Leaf (ks, _, _), Branch(q, n, t0, t1, _) ->
-        let k_id = Key.id ks in
-        if match_prefix k_id q n then
-          if (k_id land n) = 0 then
-            join (compute s t0) (empty_left t1)
-          else
-            join (compute s t1) (empty_left t0)
-        else
-          join (empty_right s) (empty_left t)
+  (*     | Leaf (ks, _, _), Branch(q, n, t0, t1, _) -> *)
+  (*       let k_id = Key.id ks in *)
+  (*       if match_prefix k_id q n then *)
+  (*         if (k_id land n) = 0 then *)
+  (*           join (compute s t0) (empty_left t1) *)
+  (*         else *)
+  (*           join (compute s t1) (empty_left t0) *)
+  (*       else *)
+  (*         join (empty_right s) (empty_left t) *)
 
-      | Branch(p, m, s0, s1, _), Branch(q, n, t0, t1, _) ->
-        if (p = q) && (m = n) then
-          (* The trees have the same prefix. recurse on the sub-trees *)
-          join (compute s0 t0) (compute s1 t1)
-        else if (Big_Endian.shorter m n) && (match_prefix q p m) then
-          (* [q] contains [p]. Merge [t] with a sub-tree of [s]. *)
-          if (q land m) = 0 then
-            join (compute s0 t) (empty_right s1)
-          else
-            join (compute s1 t) (empty_right s0)
-        else if (Big_Endian.shorter n m) && (match_prefix p q n) then
-          (* [p] contains [q]. Merge [s] with a sub-tree of [t]. *)
-          if (p land n) = 0 then
-            join (compute s t0) (empty_left t1)
-          else
-            join (compute s t1) (empty_left t0)
-        else
-          (* The prefixes disagree. *)
-          join (empty_right s) (empty_left t)
-    in
-    fun s t -> compute s t
+  (*     | Branch(p, m, s0, s1, _), Branch(q, n, t0, t1, _) -> *)
+  (*       if (p = q) && (m = n) then *)
+  (*         (1* The trees have the same prefix. recurse on the sub-trees *1) *)
+  (*         join (compute s0 t0) (compute s1 t1) *)
+  (*       else if (Big_Endian.shorter m n) && (match_prefix q p m) then *)
+  (*         (1* [q] contains [p]. Merge [t] with a sub-tree of [s]. *1) *)
+  (*         if (q land m) = 0 then *)
+  (*           join (compute s0 t) (empty_right s1) *)
+  (*         else *)
+  (*           join (compute s1 t) (empty_right s0) *)
+  (*       else if (Big_Endian.shorter n m) && (match_prefix p q n) then *)
+  (*         (1* [p] contains [q]. Merge [s] with a sub-tree of [t]. *1) *)
+  (*         if (p land n) = 0 then *)
+  (*           join (compute s t0) (empty_left t1) *)
+  (*         else *)
+  (*           join (compute s t1) (empty_left t0) *)
+  (*       else *)
+  (*         (1* The prefixes disagree. *1) *)
+  (*         join (empty_right s) (empty_left t) *)
+  (*   in *)
+  (*   fun s t -> compute s t *)
 
   type predicate_type = ExistentialPredicate | UniversalPredicate
   type predicate_result = PTrue | PFalse | PUnknown
@@ -550,20 +551,20 @@ module Shape(Key: Id_Datatype) = struct
     in
     aux'
 
-  let binary_predicate ct pt ~decide_fast ~decide_fst ~decide_snd ~decide_both =
-    let cache_merge =
-      make_binary_cache ~kind:Predicate true "binary_predicate" ct
-    in
-    make_binary_predicate cache_merge pt
-      ~decide_fast ~decide_fst ~decide_snd ~decide_both
+  (* let binary_predicate ct pt ~decide_fast ~decide_fst ~decide_snd ~decide_both = *)
+  (*   let cache_merge = *)
+  (*     make_binary_cache ~kind:Predicate true "binary_predicate" ct *)
+  (*   in *)
+  (*   make_binary_predicate cache_merge pt *)
+  (*     ~decide_fast ~decide_fst ~decide_snd ~decide_both *)
 
-  let symmetric_binary_predicate ct pt ~decide_fast ~decide_one ~decide_both =
-    let cache_merge =
-      make_binary_cache ~kind:SymmetricPredicate true
-        "symmetric_binary_predicate" ct
-    in
-    make_binary_predicate cache_merge pt
-      ~decide_fast ~decide_fst:decide_one ~decide_snd:decide_one ~decide_both
+  (* let symmetric_binary_predicate ct pt ~decide_fast ~decide_one ~decide_both = *)
+  (*   let cache_merge = *)
+  (*     make_binary_cache ~kind:SymmetricPredicate true *)
+  (*       "symmetric_binary_predicate" ct *)
+  (*   in *)
+  (*   make_binary_predicate cache_merge pt *)
+  (*     ~decide_fast ~decide_fst:decide_one ~decide_snd:decide_one ~decide_both *)
 end
 
 
@@ -576,20 +577,20 @@ module type Compositional_bool = sig
   val compose : bool -> bool -> bool
 end
 
-(* module type Info = sig *)
-(*   type key *)
-(*   type v *)
-(*   val initial_values : (key * v) list list *)
-(*   val dependencies : State.t list *)
-(* end *)
+module type Info = sig
+  type key
+  type v
+  val initial_values : (key * v) list list
+  val dependencies : State.t list
+end
 
 module Make_with_compositional_bool
     (Key: Id_Datatype)
     (V : Datatype.S)
     (Compositional_bool : Compositional_bool with type key := Key.t
                                               and type v := V.t)
-    (* (Info: Info with type key := Key.t *)
-    (*              and type v := V.t) *)
+    (Info: Info with type key := Key.t
+                 and type v := V.t)
 =
 struct
 
@@ -624,7 +625,7 @@ struct
     (* end *)
     (* else compare V.compare *)
 
-  let pretty = pretty V.pretty
+  (* let pretty = pretty V.pretty *)
 
   let compositional_bool t =
     match t with
@@ -636,25 +637,25 @@ struct
   let current_tag_before_initial_values = 1
   let current_tag = ref current_tag_before_initial_values
 
-  (* let initial_values = *)
-  (*   let tc k v = *)
-  (*     let b = Compositional_bool.leaf k v in *)
-  (*     let tag = !current_tag in *)
-  (*     incr current_tag; *)
-  (*     Tag_comp.encode tag b *)
-  (*   in *)
-  (*   (1* If required, add the empty map to the initial values, as it is always *)
-  (*      exported by the functor at Caml link-time. *1) *)
-  (*   let initial_values = *)
-  (*     if List.mem [] Info.initial_values *)
-  (*     then Info.initial_values *)
-  (*     else [] :: Info.initial_values *)
-  (*   in *)
-  (*   List.map *)
-  (*     (function [k,v] -> Leaf (k, v, tc k v) *)
-  (*             | [] -> Empty *)
-  (*             | _ -> assert false) *)
-  (*     initial_values *)
+  let initial_values =
+    let tc k v =
+      let b = Compositional_bool.leaf k v in
+      let tag = !current_tag in
+      incr current_tag;
+      Tag_comp.encode tag b
+    in
+    (* If required, add the empty map to the initial values, as it is always
+       exported by the functor at Caml link-time. *)
+    let initial_values =
+      if List.mem [] Info.initial_values
+      then Info.initial_values
+      else [] :: Info.initial_values
+    in
+    List.map
+      (function [k,v] -> Leaf (k, v, tc k v)
+              | [] -> Empty
+              | _ -> assert false)
+      initial_values
 
   let rehash_ref = ref (fun _ -> assert false)
 
@@ -663,34 +664,35 @@ struct
       (struct
         type t = hptmap
         let name = "(" ^ Key.datatype_name ^ ", " ^ V.datatype_name ^ ") ptmap"
-        open Structural_descr
-        let r = Recursive.create ()
-        let structural_descr =
-          if Descr.is_unmarshable Key.datatype_descr ||
-             Descr.is_unmarshable V.datatype_descr
-          then t_unknown
-          else
-            t_sum
-              [| [| Key.packed_descr; V.packed_descr; p_abstract |];
-                 [| p_abstract;
-                    p_abstract;
-                    recursive_pack r;
-                    recursive_pack r;
-                    p_abstract |] |]
-        let () = Recursive.update r structural_descr
-        let reprs = [ Empty ]
+        (* open Structural_descr *)
+        (* let r = Recursive.create () *)
+        (* let structural_descr = *)
+        (*   if Descr.is_unmarshable Key.datatype_descr || *)
+        (*      Descr.is_unmarshable V.datatype_descr *)
+        (*   then t_unknown *)
+        (*   else *)
+        (*     t_sum *)
+        (*       [| [| Key.packed_descr; V.packed_descr; p_abstract |]; *)
+        (*          [| p_abstract; *)
+        (*             p_abstract; *)
+        (*             recursive_pack r; *)
+        (*             recursive_pack r; *)
+        (*             p_abstract |] |] *)
+        (* let () = Recursive.update r structural_descr *)
+        (* let reprs = [ Empty ] *)
         let equal = ( == )
         let compare = compare
         let hash = hash_generic
         let rehash =
-          if Descr.is_unmarshable Key.datatype_descr ||
-             Descr.is_unmarshable V.datatype_descr
-          then Datatype.undefined
-          else fun x -> !rehash_ref x
+          (* if Descr.is_unmarshable Key.datatype_descr || *)
+          (*    Descr.is_unmarshable V.datatype_descr *)
+          (* then Datatype.undefined *)
+          (* else *)
+            fun x -> !rehash_ref x
 
         let copy = Datatype.undefined
-        let pretty = pretty
-        let mem_project = Datatype.never_any_project
+        (* let pretty = pretty *)
+        (* let mem_project = Datatype.never_any_project *)
       end)
   include (D: Datatype.S_with_collections with type t := t)
 
@@ -723,7 +725,7 @@ struct
         (* let initial_values = initial_values *)
       end)
       (struct
-        let name = Type.name ty ^ " hashconsing table"
+        let name = " hashconsing table"
         (* let dependencies = Info.dependencies *)
         let size = 137
       end)

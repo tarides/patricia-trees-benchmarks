@@ -37,28 +37,28 @@ module Shape (Key : Id_Datatype): sig
 end
 
 (** Required information for the correctness of the hptmaps. *)
-(*module type Info = sig *)
-(*  type key *)
-(*  type v *)
+module type Info = sig
+  type key
+  type v
 
-(*  val initial_values : (key * v) list list *)
-(*  (1** List of the maps that must be shared between all instances of Frama-C *)
-(*      (the maps being described by the list of their bindings). *)
-(*      Must include all maps that are exported at Caml link-time when the *)
-(*      functor is applied. *1) *)
+  val initial_values : (key * v) list list
+  (** List of the maps that must be shared between all instances of Frama-C
+      (the maps being described by the list of their bindings).
+      Must include all maps that are exported at Caml link-time when the
+      functor is applied. *)
 
-(*  val dependencies : State.t list *)
-(*  (1** Dependencies of the hash-consing table. The table will be cleared *)
-(*      whenever one of those dependencies is cleared. *1) *)
-(*end *)
+  val dependencies : State.t list
+  (** Dependencies of the hash-consing table. The table will be cleared
+      whenever one of those dependencies is cleared. *)
+end
 
 (** This functor builds the complete module of maps indexed by keys [Key]
     to values [V]. *)
 module Make
     (Key : Id_Datatype)
     (V : Datatype.S)
-    (* (_ : Info with type key := Key.t *)
-    (*            and type v := V.t) *)
+    (_ : Info with type key := Key.t
+               and type v := V.t)
   : Hptmap_sig.S with type key = Key.t
                   and type v = V.t
                   and type 'v map = 'v Shape(Key).map

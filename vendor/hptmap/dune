@@ -1,2 +1,4 @@
 (library
- (name hptmap))
+ (name hptmap)
+ (libraries
+  zarith))
