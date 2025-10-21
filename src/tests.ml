@@ -62,6 +62,37 @@ module PatriciaTree_bench = Bench.Make (struct
   let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
 end)
 
+module HashconsedPatriciaTree_bench = Bench.Make (struct
+  module M =
+    PatriciaTree.MakeHashconsedMap
+      (struct
+        type t = int
+
+        let to_int = Fun.id
+      end)
+      (struct
+        type _ t = string
+
+        let hash = String.hash
+        let polyeq = String.equal
+      end)
+      ()
+
+  type kv = int * string
+  type t = string M.t
+
+  let make_kv kv = kv
+  let name = "HashConsedPatriciaTree"
+  let empty = M.empty
+  let add t (k, v) = M.add k v t
+  let of_list = M.of_list
+  let of_seq = M.of_seq
+  let union a b = M.idempotent_union (fun _ a _ -> a) a b
+  let merge f a b = M.slow_merge f a b
+  let inter a b = M.idempotent_inter (fun _ a _ -> a) a b
+  let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
+end)
+
 module Colibri_intmap_bench = Bench.Make (struct
   open Popop_lib
 
@@ -104,5 +135,6 @@ let tests =
     Ptmap_bench.tests;
     CCIntMap_bench.tests;
     PatriciaTree_bench.tests;
+    HashconsedPatriciaTree_bench.tests;
     Colibri_intmap_bench.tests;
   ]
