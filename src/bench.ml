@@ -151,10 +151,12 @@ end = struct
       (random_tree ()) (random_tree ())
 
   let t_inter =
-    make_test "Set operations: inter" @@ fun () -> Impl.inter (random_tree ()) (random_tree ())
+    make_test "Set operations: inter" @@ fun () ->
+    Impl.inter (random_tree ()) (random_tree ())
 
   let t_diff =
-    make_test "Set operations: diff" @@ fun () -> Impl.diff (random_tree ()) (random_tree ())
+    make_test "Set operations: diff" @@ fun () ->
+    Impl.diff (random_tree ()) (random_tree ())
 
   let tests =
     [
