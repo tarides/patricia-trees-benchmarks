@@ -142,7 +142,7 @@ module Colibri_intmap_hetero_bench = Bench.Make (struct
         type ('a, 'b) t = 'b
       end)
 
-  type kv = (int * string)
+  type kv = int * string
   type t = (int, string) M.data M.t
 
   let make_kv (k, v) = (k, v)
@@ -151,11 +151,28 @@ module Colibri_intmap_hetero_bench = Bench.Make (struct
   let add m (k, v) = M.add k v m
   let of_list _ = raise Bench.Unsupported
   let of_seq _ = raise Bench.Unsupported
-
   let union _ _ = raise Bench.Unsupported
   let merge _ _ _ = raise Bench.Unsupported
-  let inter _ _= raise Bench.Unsupported
+  let inter _ _ = raise Bench.Unsupported
   let diff _ _ = raise Bench.Unsupported
+end)
+
+module Frama_C_intmap_bench = Bench.Make (struct
+  open Framac_intmap.Intmap
+
+  type kv = int * string
+  type nonrec t = string t
+
+  let make_kv = Fun.id
+  let name = "FramaC.Intmap"
+  let empty = empty
+  let add m (k, v) = add k v m
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+  let union = union (fun _ x _ -> x)
+  let merge = merge
+  let inter = inter (fun _ x _ -> x)
+  let diff = diffq (fun _ _ _ -> None)
 end)
 
 let tests =
@@ -165,4 +182,5 @@ let tests =
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
     Colibri_intmap_bench.tests;
+    Frama_C_intmap_bench.tests;
   ]
