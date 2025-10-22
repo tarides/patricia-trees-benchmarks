@@ -1,0 +1,3 @@
+(library
+ (libraries framac_intmap)
+ (name framac_idxmap))

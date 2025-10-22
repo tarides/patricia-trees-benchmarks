@@ -11,4 +11,5 @@
   containers-data
   patricia-tree
   popop_lib
-  framac_intmap))
+  framac_intmap
+  framac_idxmap))
