@@ -14,8 +14,9 @@ let benchmark_all_with_unsupported cfg instances tests =
     tests;
   (results, !unsupported)
 
+let instances = Instance.[ promoted; minor_allocated; monotonic_clock ]
+
 let benchmark () =
-  let instances = Instance.[ monotonic_clock ] in
   let cfg =
     Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
   in
@@ -28,12 +29,13 @@ let analyze results =
   let ols =
     Analyze.ols ~bootstrap:0 ~r_square:true ~predictors:[| Measure.run |]
   in
-  let results = Analyze.all ols Instance.monotonic_clock results in
-  Analyze.merge ols [ Instance.monotonic_clock ] [ results ]
+  Analyze.merge ols instances
+    (List.map (fun instance -> Analyze.all ols instance results) instances)
 
 let () =
-  Bechamel_notty.Unit.add Instance.monotonic_clock
-    (Measure.unit Instance.monotonic_clock)
+  List.iter
+    (fun instance -> Bechamel_notty.Unit.add instance (Measure.unit instance))
+    instances
 
 let img (window, results) =
   Bechamel_notty.Multiple.image_of_ols_results ~rect:window
