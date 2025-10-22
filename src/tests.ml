@@ -199,6 +199,32 @@ module Frama_C_idxmap_bench = Bench.Make (struct
   let diff = M.diffq (fun _ _ _ -> None)
 end)
 
+module Frama_C_mergemap_bench = Bench.Make (struct
+  open Framac_mergemap.Mergemap
+
+  module M = Make (struct
+    type t = int
+
+    let hash = Fun.id
+    let equal = Int.equal
+    let compare = Int.compare
+  end)
+
+  type kv = int * string
+  type t = string M.t
+
+  let make_kv = Fun.id
+  let name = "FramaC.Mergemap"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+  let union = M.union (fun _ x _ -> x)
+  let merge = M.merge
+  let inter = M.inter (fun _ x _ -> x)
+  let diff = M.diffq (fun _ _ _ -> None)
+end)
+
 let tests =
   [
     Ptmap_bench.tests;
@@ -208,4 +234,5 @@ let tests =
     Colibri_intmap_bench.tests;
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
+    Frama_C_mergemap_bench.tests;
   ]

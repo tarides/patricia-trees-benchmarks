@@ -12,4 +12,5 @@
   patricia-tree
   popop_lib
   framac_intmap
-  framac_idxmap))
+  framac_idxmap
+  framac_mergemap))

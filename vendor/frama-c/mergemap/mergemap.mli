@@ -1,0 +1,69 @@
+(**************************************************************************)
+(*                                                                        *)
+(*  SPDX-License-Identifier LGPL-2.1                                      *)
+(*  Copyright (C)                                                         *)
+(*  CEA (Commissariat à l'énergie atomique et aux énergies alternatives)  *)
+(*                                                                        *)
+(**************************************************************************)
+
+(* -------------------------------------------------------------------------- *)
+(** Merging Map Functor *)
+(* -------------------------------------------------------------------------- *)
+
+module type Key =
+sig
+  type t
+  val hash : t -> int
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
+end
+
+module Make(K : Key) :
+sig
+
+  open Framac_intmap
+
+  type key = K.t
+
+  type 'a t = (key * 'a) list Intmap.t
+
+  val is_empty : 'a t -> bool
+
+  val empty : 'a t
+  val add : key -> 'a -> 'a t -> 'a t
+  val mem : key -> 'a t -> bool
+  val find : key -> 'a t -> 'a
+  val findk : key -> 'a t -> key * 'a
+  val remove : key -> 'a t -> 'a t
+  val size : 'a t -> int
+
+  (** [insert (fun key v old -> ...) key v map] *)
+  val insert : (key -> 'a -> 'a -> 'a) -> key -> 'a -> 'a t -> 'a t
+
+  val change : (key -> 'b -> 'a option -> 'a option) -> key -> 'b -> 'a t -> 'a t
+
+  val filter : (key -> 'a -> bool) -> 'a t -> 'a t
+  val partition : (key -> 'a -> bool) -> 'a t -> 'a t * 'a t
+
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val mapi : (key -> 'a -> 'b) -> 'a t -> 'b t
+  val mapf : (key -> 'a -> 'b option) -> 'a t -> 'b t
+  val mapq : (key -> 'a -> 'a option) -> 'a t -> 'a t
+
+  val iter : (key -> 'a -> unit) -> 'a t -> unit
+  val iter_sorted : (key -> 'a -> unit) -> 'a t -> unit
+  val fold : (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  val fold_sorted: (key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  val union : (key -> 'a -> 'a -> 'a) -> 'a t -> 'a t -> 'a t
+  val inter : (key -> 'a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+  val interf : (key -> 'a -> 'b -> 'c option) -> 'a t -> 'b t -> 'c t
+  val interq : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  val diffq : (key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
+  val subset : (key -> 'a -> 'b -> bool) -> 'a t -> 'b t -> bool
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+
+  val iterk : (key -> 'a -> 'b -> unit) -> 'a t -> 'b t -> unit
+  val iter2 : (key -> 'a option -> 'b option -> unit) -> 'a t -> 'b t -> unit
+  val merge : (key -> 'a option -> 'b option -> 'c option) -> 'a t -> 'b t -> 'c t
+
+end
