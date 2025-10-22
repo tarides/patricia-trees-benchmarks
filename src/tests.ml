@@ -130,6 +130,34 @@ module Colibri_intmap_bench = Bench.Make (struct
   let diff = M.diff (fun _ a _ -> Some a)
 end)
 
+module Colibri_intmap_hetero_bench = Bench.Make (struct
+  open Popop_lib
+
+  module M =
+    Intmap_hetero.Make1
+      (struct
+        type 'a t = int
+      end)
+      (struct
+        type ('a, 'b) t = 'b
+      end)
+
+  type kv = (int * string)
+  type t = (int, string) M.data M.t
+
+  let make_kv (k, v) = (k, v)
+  let name = "Colibri2.Intmap_hetero"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+
+  let union _ _ = raise Bench.Unsupported
+  let merge _ _ _ = raise Bench.Unsupported
+  let inter _ _= raise Bench.Unsupported
+  let diff _ _ = raise Bench.Unsupported
+end)
+
 let tests =
   [
     Ptmap_bench.tests;
