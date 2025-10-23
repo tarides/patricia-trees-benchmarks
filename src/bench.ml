@@ -9,6 +9,7 @@ type t = { op_name : string; test : Bechamel.Test.t }
 (** Pre-constructed test data. *)
 
 let state = Random.get_state ()
+let array_rand ar = ar.(Gen.int_bound (Array.length ar - 1) state)
 let tree_size = 10000
 let value_size = 100
 let ordered_key_list = List.init tree_size (fun i -> i)
@@ -27,7 +28,7 @@ let ordered_key_value_list = List.map key_value_of_key ordered_key_list
 let ordered_high_key_value_list =
   List.init tree_size (fun i -> (Int.max_int - i, string_of_int i))
 
-let mixed_key_lists =
+let mixed_order_key_lists =
   let mk_mixed ratio =
     List.init tree_size (fun i ->
         match Gen.(option ~ratio int state) with Some r -> r | None -> i)
@@ -38,6 +39,22 @@ let mixed_key_lists =
     (5, mk_mixed 0.05);
     (25, mk_mixed 0.25);
     (100, random_key_list ());
+  ]
+
+let mixed_shared_key_lists =
+  let shared_keys = Array.init 50 (fun i -> i) in
+  let sizes = [| 1; 2; 4; 8; 16; 32; 64 |] in
+  let mk_mixed_shared ratio =
+    List.init (array_rand sizes) (fun _ ->
+        match Gen.(option ~ratio int state) with
+        | Some r -> r
+        | None -> array_rand shared_keys)
+  in
+  [
+    (1, mk_mixed_shared 0.01);
+    (5, mk_mixed_shared 0.05);
+    (25, mk_mixed_shared 0.25);
+    (100, mk_mixed_shared 1.);
   ]
 
 (** Defines benchmarks for an abstract implementation. This ensures that the
@@ -98,19 +115,14 @@ end = struct
   let ordered_kv_list = List.map Impl.make_kv ordered_key_value_list
   let ordered_high_kv_list = List.map Impl.make_kv ordered_high_key_value_list
   let mk_tree = List.fold_left Impl.add Impl.empty
+  let kvs_of_keys = List.map (fun k -> Impl.make_kv (k, ""))
 
   let random_trees =
     Array.init 10 (fun _ -> mk_tree (mk_random_kv_list ~size:1000 ()))
 
   (* Quickly return a tree from a collection of pre-built trees. These trees
      are smaller than [tree_size]. *)
-  let random_tree () =
-    random_trees.(Gen.int_bound (Array.length random_trees - 1) state)
-
-  let mixed_kv_lists =
-    List.map
-      (fun (i, l) -> (i, List.map (fun k -> Impl.make_kv (k, "")) l))
-      mixed_key_lists
+  let random_tree () = array_rand random_trees
 
   let t_construct_pos_low_ordered =
     make_test
@@ -125,13 +137,14 @@ end = struct
     @@ fun () -> List.fold_left Impl.add Impl.empty ordered_high_kv_list
 
   let t_construct_mixed =
+    let data =
+      List.map (fun (i, l) -> (i, kvs_of_keys l)) mixed_order_key_lists
+    in
     make_indexed
       "Construction with small positive unordered keys and part of random keys \
        a using 'add' and 'empty'."
-      ~fmt:"%s (%d%% random)"
-      (List.map fst mixed_kv_lists)
-    @@ fun i () ->
-    List.fold_left Impl.add Impl.empty (List.assoc i mixed_kv_lists)
+      ~fmt:"%s (%d%% random)" (List.map fst data)
+    @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let t_of_list =
     make_test "Construction with 'of_list'" @@ fun () ->
@@ -158,6 +171,14 @@ end = struct
     make_test "Set operations: diff" @@ fun () ->
     Impl.diff (random_tree ()) (random_tree ())
 
+  let t_hashconsing =
+    let data =
+      List.map (fun (i, keys) -> (i, kvs_of_keys keys)) mixed_shared_key_lists
+    in
+    make_indexed "Construction from shared keys, favorable to hash-consing"
+      ~fmt:"%s (%d%% random)" (List.map fst data)
+    @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
+
   let tests =
     [
       t_construct_pos_low_ordered;
@@ -169,6 +190,7 @@ end = struct
       t_merge;
       t_inter;
       t_diff;
+      t_hashconsing;
     ]
 end
 
