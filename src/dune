@@ -10,4 +10,7 @@
   ptmap
   containers-data
   patricia-tree
-  popop_lib))
+  popop_lib
+  framac_intmap
+  framac_idxmap
+  framac_mergemap))
