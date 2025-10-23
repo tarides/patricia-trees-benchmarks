@@ -32,7 +32,8 @@ let analyze results =
   Analyze.merge ols instances
     (List.map (fun instance -> Analyze.all ols instance results) instances)
 
-let analyze = List.map (fun (name, (r, unsupported)) -> (name, r, analyze r, unsupported))
+let analyze =
+  List.map (fun (name, (r, unsupported)) -> (name, r, analyze r, unsupported))
 
 let () =
   List.iter
@@ -67,7 +68,33 @@ let output_notty results =
   in
   output_image img
 
+let output_html results =
+  let open Bechamel_js in
+  let ok_or_fail = function Ok () -> () | Error (`Msg msg) -> failwith msg in
+  let nothing _ = Ok () in
+  let js_data =
+    let buf = Buffer.create 2048 in
+    List.map
+      (fun (name, raw, analyzed, _unsupported) ->
+        Buffer.clear buf;
+        ok_or_fail
+        @@ emit ~dst:(Buffer buf) nothing ~x_label:Measure.run
+             ~y_label:(Measure.label Instance.monotonic_clock)
+             (analyzed, raw);
+        (name, Buffer.contents buf))
+      results
+  in
+  let out_fname = "results.html" in
+  let _, data = List.nth js_data 0 in
+  let outp =
+    Unix.open_process_out
+      (Filename.quote_command "bechamel-html" ~stdout:out_fname [])
+  in
+  Printf.fprintf outp "%s\n" data;
+  Printf.printf "\nHTML output available at %s\n" out_fname
+
 let () =
   let results = benchmark () in
   let analyzed = analyze results in
-  output_notty analyzed
+  output_notty analyzed;
+  output_html analyzed

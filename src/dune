@@ -6,6 +6,7 @@
   bechamel
   notty.unix
   bechamel-notty
+  bechamel-js
   qcheck
   ptmap
   containers-data
