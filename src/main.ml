@@ -72,26 +72,25 @@ let output_html results =
   let open Bechamel_js in
   let ok_or_fail = function Ok () -> () | Error (`Msg msg) -> failwith msg in
   let nothing _ = Ok () in
-  let js_data =
-    let buf = Buffer.create 2048 in
-    List.map
-      (fun (name, raw, analyzed, _unsupported) ->
-        Buffer.clear buf;
-        ok_or_fail
-        @@ emit ~dst:(Buffer buf) nothing ~x_label:Measure.run
-             ~y_label:(Measure.label Instance.monotonic_clock)
-             (analyzed, raw);
-        (name, Buffer.contents buf))
-      results
+  let buf = Buffer.create 2048 in
+  let aux (name, raw, analyzed, _) =
+    Buffer.clear buf;
+    let data =
+      ok_or_fail
+      @@ emit ~dst:(Buffer buf) nothing ~x_label:Measure.run
+           ~y_label:(Measure.label Instance.monotonic_clock)
+           (analyzed, raw);
+      Buffer.contents buf
+    in
+    let out_fname = name ^ ".html" in
+    let outp =
+      Unix.open_process_out
+        (Filename.quote_command "bechamel-html" ~stdout:out_fname [])
+    in
+    Printf.fprintf outp "%s\n" data;
+    Printf.printf "\nHTML output available at %s\n" out_fname
   in
-  let out_fname = "results.html" in
-  let _, data = List.nth js_data 0 in
-  let outp =
-    Unix.open_process_out
-      (Filename.quote_command "bechamel-html" ~stdout:out_fname [])
-  in
-  Printf.fprintf outp "%s\n" data;
-  Printf.printf "\nHTML output available at %s\n" out_fname
+  List.iter aux results
 
 let () =
   let results = benchmark () in
