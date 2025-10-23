@@ -32,6 +32,8 @@ let analyze results =
   Analyze.merge ols instances
     (List.map (fun instance -> Analyze.all ols instance results) instances)
 
+let analyze = List.map (fun (name, (r, unsupported)) -> (name, r, analyze r, unsupported))
+
 let () =
   List.iter
     (fun instance -> Bechamel_notty.Unit.add instance (Measure.unit instance))
@@ -41,9 +43,8 @@ let img (window, results) =
   Bechamel_notty.Multiple.image_of_ols_results ~rect:window
     ~predictor:Measure.run results
 
-open Notty_unix
-
-let () =
+let output_notty results =
+  let open Notty_unix in
   let open Notty in
   let open Notty.Infix in
   let window =
@@ -53,15 +54,20 @@ let () =
   in
   let img =
     List.map
-      (fun (name, (results, unsupported)) ->
+      (fun (name, _, analyzed, unsupported) ->
         let unsupported =
           if unsupported = [] then I.empty
           else
             I.hcat
               (List.map (I.string A.empty) ("Unsupported by: " :: unsupported))
         in
-        I.string A.empty name <-> img (window, analyze results) <-> unsupported)
-      (benchmark ())
+        I.string A.empty name <-> img (window, analyzed) <-> unsupported)
+      results
     |> I.vcat
   in
   output_image img
+
+let () =
+  let results = benchmark () in
+  let analyzed = analyze results in
+  output_notty analyzed
