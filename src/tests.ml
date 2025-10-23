@@ -51,7 +51,7 @@ module PatriciaTree_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv kv = kv
-  let name = "PatriciaTree"
+  let name = "Codex/BaseMap"
   let empty = M.empty
   let add t (k, v) = M.add k v t
   let of_list = M.of_list
@@ -82,7 +82,7 @@ module HashconsedPatriciaTree_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv kv = kv
-  let name = "HashConsedPatriciaTree"
+  let name = "Codex/HashConsedMap"
   let empty = M.empty
   let add t (k, v) = M.add k v t
   let of_list = M.of_list
@@ -119,7 +119,7 @@ module Colibri_intmap_bench = Bench.Make (struct
   type t = string M.data M.t
 
   let make_kv = Fun.id
-  let name = "Colibri2"
+  let name = "Colibri2/Intmap"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list = M.of_list
@@ -146,7 +146,7 @@ module Colibri_intmap_hetero_bench = Bench.Make (struct
   type t = (int, string) M.data M.t
 
   let make_kv (k, v) = (k, v)
-  let name = "Colibri2.Intmap_hetero"
+  let name = "Colibri2/Intmap_hetero"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list _ = raise Bench.Unsupported
@@ -164,7 +164,7 @@ module Frama_C_intmap_bench = Bench.Make (struct
   type nonrec t = string t
 
   let make_kv = Fun.id
-  let name = "FramaC.Intmap"
+  let name = "FramaC/Intmap"
   let empty = empty
   let add m (k, v) = add k v m
   let of_list _ = raise Bench.Unsupported
@@ -188,7 +188,7 @@ module Frama_C_idxmap_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv = Fun.id
-  let name = "FramaC.Idxmap"
+  let name = "FramaC/Idxmap"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list _ = raise Bench.Unsupported
@@ -214,7 +214,7 @@ module Frama_C_mergemap_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv = Fun.id
-  let name = "FramaC.Mergemap"
+  let name = "FramaC/Mergemap"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list _ = raise Bench.Unsupported
