@@ -125,25 +125,19 @@ end = struct
   let random_tree () = array_rand random_trees
 
   let t_construct_pos_low_ordered =
-    make_test
-      "Construction with positive, <ordered keys close to '0' using 'add' and \
-       'empty'."
-    @@ fun () -> List.fold_left Impl.add Impl.empty ordered_kv_list
+    make_test "Add lesser-than positive keys close to 0" @@ fun () ->
+    List.fold_left Impl.add Impl.empty ordered_kv_list
 
   let t_construct_pos_high_ordered =
-    make_test
-      "Construction with positive, >ordered keys close to 'max_int using 'add' \
-       and 'empty'."
-    @@ fun () -> List.fold_left Impl.add Impl.empty ordered_high_kv_list
+    make_test "Add greater-than positive keys close to max_int" @@ fun () ->
+    List.fold_left Impl.add Impl.empty ordered_high_kv_list
 
   let t_construct_mixed =
     let data =
       List.map (fun (i, l) -> (i, kvs_of_keys l)) mixed_order_key_lists
     in
-    make_indexed
-      "Construction with small positive unordered keys and part of random keys \
-       a using 'add' and 'empty'."
-      ~fmt:"%s (%d%% random)" (List.map fst data)
+    make_indexed "Add unordered small positive keys" ~fmt:"%s (%d%% random)"
+      (List.map fst data)
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let t_of_list =
@@ -175,8 +169,8 @@ end = struct
     let data =
       List.map (fun (i, keys) -> (i, kvs_of_keys keys)) mixed_shared_key_lists
     in
-    make_indexed "Construction from shared keys, favorable to hash-consing"
-      ~fmt:"%s (%d%% random)" (List.map fst data)
+    make_indexed "Construction from shared keys" ~fmt:"%s (%d%% random)"
+      (List.map fst data)
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let tests =
