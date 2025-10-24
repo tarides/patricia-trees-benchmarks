@@ -48,18 +48,15 @@ let unit_of_label label =
          else None)
        instances)
 
-(** Render the result (in ns/run) into µs/run *)
 let test_result_to_str ols =
   let module O = Analyze.OLS in
-  let rsq = Option.value ~default:0. (O.r_square ols) in
   let predictor = List.find_index (( = ) Measure.run) (O.predictors ols) in
   match (O.estimates ols, predictor) with
   | Some estimates, Some i ->
       let est = List.nth estimates i in
-      let rsq_percent = max 0. (rsq *. 100.) in
       let precision = if est < 100. then 2 else if est < 1000. then 1 else 0 in
       let unit_r = unit_of_label (O.responder ols) in
-      Format.asprintf "%.*f %s/run (r²=%.0f%%)" precision est unit_r rsq_percent
+      Format.asprintf "%.*f %s/run" precision est unit_r
   | None, _ -> "unsupported"
   | Some _, None -> "?"
 
