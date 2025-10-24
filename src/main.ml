@@ -15,6 +15,11 @@ let benchmark_all_with_unsupported cfg instances tests =
   (results, !unsupported)
 
 let instances = Instance.[ promoted; minor_allocated; monotonic_clock ]
+let tests = Bench.merge Tests.tests
+
+let test_names =
+  List.sort_uniq String.compare
+    (List.concat_map (fun (_, test) -> Test.names test) tests)
 
 let benchmark () =
   let cfg =
@@ -23,7 +28,7 @@ let benchmark () =
   List.map
     (fun (name, tests) ->
       (name, benchmark_all_with_unsupported cfg instances tests))
-    (Bench.merge Tests.tests)
+    tests
 
 let analyze results =
   let ols =
@@ -32,7 +37,44 @@ let analyze results =
   Analyze.merge ols instances
     (List.map (fun instance -> Analyze.all ols instance results) instances)
 
-let analyze = List.map (fun (name, (r, unsupported)) -> (name, r, analyze r, unsupported))
+let analyze =
+  List.map (fun (name, (r, unsupported)) -> (name, analyze r, unsupported))
+
+(** Render the result (in ns/run) into µs/run *)
+let test_result_to_str ols =
+  let module O = Analyze.OLS in
+  let rsq = Option.value ~default:0. (O.r_square ols) in
+  let predictor = List.find_index (( = ) Measure.run) (O.predictors ols) in
+  match (O.estimates ols, predictor) with
+  | Some estimates, Some i ->
+      let est_ns = List.nth estimates i in
+      let est_us = est_ns /. 1000. in
+      let rsq_percent = max 0. (rsq *. 100.) in
+      let precision =
+        if est_us < 10. then 4 else if est_us < 100. then 2 else 0
+      in
+      Format.asprintf "%.*f µs/run (r²=%.0f%%)" precision est_us rsq_percent
+  | None, _ -> "?"
+  | Some _, None -> "-"
+
+let output_csv results =
+  let header_row = "" :: test_names in
+  List.concat_map
+    (fun instance ->
+      let instance_label = Measure.label instance in
+      [ "# " ^ instance_label ]
+      :: header_row
+      :: List.map
+           (fun (name, analyzed, _unsupported) ->
+             let r = Hashtbl.find analyzed instance_label in
+             name
+             :: List.map
+                  (fun tname ->
+                    Option.fold ~none:"?" ~some:test_result_to_str
+                      (Hashtbl.find_opt r tname))
+                  test_names)
+           results)
+    instances
 
 let () =
   List.iter
@@ -54,7 +96,7 @@ let output_notty results =
   in
   let img =
     List.map
-      (fun (name, _, analyzed, unsupported) ->
+      (fun (name, analyzed, unsupported) ->
         let unsupported =
           if unsupported = [] then I.empty
           else
@@ -65,9 +107,17 @@ let output_notty results =
       results
     |> I.vcat
   in
-  output_image img
+  output_image img;
+  Format.printf "@\n"
 
 let () =
   let results = benchmark () in
+  List.iter
+    (fun (name, (tests, _)) ->
+      Hashtbl.iter (fun tname _r -> Format.printf "%s %s@\n" name tname) tests)
+    results;
   let analyzed = analyze results in
-  output_notty analyzed
+  output_notty analyzed;
+  let outf = "results.csv" in
+  Csv.save outf (output_csv analyzed);
+  Format.printf "CSV output available in %s@\n" outf
