@@ -95,7 +95,7 @@ end = struct
   open Bechamel
 
   let make_test op_name call =
-    { op_name; test = Test.make ~name:Impl.name (Staged.stage @@ call) }
+    [ { op_name; test = Test.make ~name:Impl.name (Staged.stage @@ call) } ]
 
   (* let make_tests op_name ?(fmt : Test.fmt_grouped = "%s.%s") tests = *)
   (*   let tests = *)
@@ -105,7 +105,11 @@ end = struct
 
   let make_indexed op_name ~fmt args call =
     let f arg = Staged.stage (call arg) in
-    { op_name; test = Test.make_indexed ~name:Impl.name ~fmt ~args f }
+    List.map
+      (fun key ->
+        let op_name = Format.asprintf fmt op_name key in
+        { op_name; test = Test.make ~name:Impl.name (f key) })
+      args
 
   let mk_random_kv_list ?size () =
     List.map Impl.make_kv (random_key_value_list ?size ())
@@ -180,18 +184,19 @@ end = struct
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let tests =
-    [
-      t_construct_pos_low_ordered;
-      t_construct_pos_high_ordered;
-      t_construct_mixed;
-      t_of_list;
-      t_of_seq;
-      t_union;
-      t_merge;
-      t_inter;
-      t_diff;
-      t_hashconsing;
-    ]
+    List.concat
+      [
+        t_construct_pos_low_ordered;
+        t_construct_pos_high_ordered;
+        t_construct_mixed;
+        t_of_list;
+        t_of_seq;
+        t_union;
+        t_merge;
+        t_inter;
+        t_diff;
+        t_hashconsing;
+      ]
 end
 
 (** Group tests defined in [Make] by operations to allow comparing the result.
