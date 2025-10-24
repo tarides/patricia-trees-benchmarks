@@ -93,7 +93,7 @@ module HashconsedPatriciaTree_bench = Bench.Make (struct
   let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
 end)
 
-module Colibri_intmap_bench = Bench.Make (struct
+module Colibri_intmap_hash_consed_bench = Bench.Make (struct
   open Popop_lib
 
   module Key = struct
@@ -119,7 +119,7 @@ module Colibri_intmap_bench = Bench.Make (struct
   type t = string M.data M.t
 
   let make_kv = Fun.id
-  let name = "Colibri2/Intmap"
+  let name = "Colibri2/Intmap-hashconsed"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list = M.of_list
@@ -231,7 +231,7 @@ let tests =
     CCIntMap_bench.tests;
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
-    Colibri_intmap_bench.tests;
+    Colibri_intmap_hash_consed_bench.tests;
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
     Frama_C_mergemap_bench.tests;
