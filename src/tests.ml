@@ -104,6 +104,35 @@ module Colibri_intmap_bench = Bench.Make (struct
     let pp = Pp.int
   end
 
+  module A = Intmap.Make (Key)
+  module M = A.NT
+
+  type kv = M.key * string
+  type t = string M.data M.t
+
+  let make_kv = Fun.id
+  let name = "Colibri2/Intmap"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list = M.of_list
+  let of_seq _ = raise Bench.Unsupported
+  let union = M.union (fun _ a _ -> Some a)
+  let merge f = M.union_merge (fun k a b -> f k a (Some b))
+  let inter = M.inter (fun _ a _ -> Some a)
+  let diff = M.diff (fun _ a _ -> Some a)
+end)
+
+module Colibri_intmap_hash_consed_bench = Bench.Make (struct
+  open Popop_lib
+
+  module Key = struct
+    type t = int
+
+    let tag = Fun.id
+    let equal = Int.equal
+    let pp = Pp.int
+  end
+
   module Data = struct
     type t = string
 
@@ -119,7 +148,7 @@ module Colibri_intmap_bench = Bench.Make (struct
   type t = string M.data M.t
 
   let make_kv = Fun.id
-  let name = "Colibri2/Intmap"
+  let name = "Colibri2/Intmap-hashconsed"
   let empty = M.empty
   let add m (k, v) = M.add k v m
   let of_list = M.of_list
@@ -232,6 +261,7 @@ let tests =
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
     Colibri_intmap_bench.tests;
+    Colibri_intmap_hash_consed_bench.tests;
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
     Frama_C_mergemap_bench.tests;
