@@ -40,6 +40,14 @@ let analyze results =
 let analyze =
   List.map (fun (name, (r, unsupported)) -> (name, analyze r, unsupported))
 
+let unit_of_label label =
+  Option.value ~default:label
+    (List.find_map
+       (fun instance ->
+         if Measure.label instance = label then Some (Measure.unit instance)
+         else None)
+       instances)
+
 (** Render the result (in ns/run) into µs/run *)
 let test_result_to_str ols =
   let module O = Analyze.OLS in
@@ -47,15 +55,13 @@ let test_result_to_str ols =
   let predictor = List.find_index (( = ) Measure.run) (O.predictors ols) in
   match (O.estimates ols, predictor) with
   | Some estimates, Some i ->
-      let est_ns = List.nth estimates i in
-      let est_us = est_ns /. 1000. in
+      let est = List.nth estimates i in
       let rsq_percent = max 0. (rsq *. 100.) in
-      let precision =
-        if est_us < 10. then 4 else if est_us < 100. then 2 else 0
-      in
-      Format.asprintf "%.*f µs/run (r²=%.0f%%)" precision est_us rsq_percent
-  | None, _ -> "?"
-  | Some _, None -> "-"
+      let precision = if est < 100. then 2 else if est < 1000. then 1 else 0 in
+      let unit_r = unit_of_label (O.responder ols) in
+      Format.asprintf "%.*f %s/run (r²=%.0f%%)" precision est unit_r rsq_percent
+  | None, _ -> "unsupported"
+  | Some _, None -> "?"
 
 let output_csv results =
   let header_row = "" :: test_names in
