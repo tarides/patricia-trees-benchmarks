@@ -14,7 +14,18 @@ let benchmark_all_with_unsupported cfg instances tests =
     tests;
   (results, !unsupported)
 
-let instances = Instance.[ promoted; minor_allocated; monotonic_clock ]
+(** Alternative to [monotonic_clock] that works in µs/run. *)
+let monotonic_clock_us =
+  let module Ext = struct
+    include Monotonic_clock
+
+    let get () = get () /. 1000.
+    let unit () = "µs"
+  end in
+  let ext = Measure.register (module Ext) in
+  Measure.instance (module Ext) ext
+
+let instances = Instance.[ promoted; minor_allocated; monotonic_clock_us ]
 let tests = Bench.merge Tests.tests
 
 let test_names =
