@@ -15,4 +15,15 @@
   qcheck
   ptmap
   containers-data
+  containers
+  zarith
+  fmt
+  qcheck-core
+  calcium
+  re
+  trace
+  trace-tef
+  ppx_deriving
+  ppx_hash
+  ppx_inline_test
   patricia-tree))
