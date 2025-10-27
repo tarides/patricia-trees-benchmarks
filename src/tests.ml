@@ -262,6 +262,7 @@ let tests =
     HashconsedPatriciaTree_bench.tests;
     Colibri_intmap_bench.tests;
     Colibri_intmap_hash_consed_bench.tests;
+    Colibri_intmap_hetero_bench.tests;
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
     Frama_C_mergemap_bench.tests;
