@@ -235,7 +235,7 @@ module Colibri_map_hetero_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv (k, v) = (Key.Str k, v)
-  let name = "Colibri_int_hetero"
+  let name = "Colibri2/Map_hetero"
   let empty = M.empty
   let add t (k, v) = M.add k v t
   let of_list _ = raise Bench.Unsupported
