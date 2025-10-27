@@ -40,6 +40,94 @@ module CCIntMap_bench = Bench.Make (struct
   let diff _ _ = raise Bench.Unsupported
 end)
 
+module Dmap_bench = Bench.Make (struct
+  module Key = struct
+    type _ t = Str : int -> string t [@@unboxed]
+
+    let compare (type a b) (a : a t) (b : b t) : (a, b) Dmap.cmp =
+      let Str a, Str b = (a, b) in
+      if a < b then Dmap.Lt else if a > b then Gt else Eq
+  end
+
+  module M = Dmap.Make (Key)
+
+  type kv = M.binding
+  type t = M.t
+
+  let make_kv (k, v) = M.Binding (Key.Str k, v)
+  let name = "Dmap"
+  let empty = M.empty
+  let add t (M.Binding (k, v)) = M.add k v t
+  let of_list _ = raise Bench.Unsupported
+  let of_seq = M.of_seq
+
+  let union =
+    let union_fun _ a _ = Some a in
+    M.union { M.union_fun }
+
+  let merge (f : int -> string option -> string option -> string option) a b =
+    let merge_fun (type a) (k : a Key.t) (a : a option) (b : a option) :
+        a option =
+      match k with Key.Str k -> f k a b | _ -> .
+    in
+    M.merge { M.merge_fun } a b
+
+  let inter _ _ = raise Bench.Unsupported
+  let diff _ _ = raise Bench.Unsupported
+end)
+
+module Gmap_bench = Bench.Make (struct
+  module Key = struct
+    type _ t = Str : int -> string t [@@unboxed]
+
+    let compare (type a b) (a : a t) (b : b t) : (a, b) Gmap.Order.t =
+      let open Gmap.Order in
+      let Str a, Str b = (a, b) in
+      if a < b then Lt else if a > b then Gt else Eq
+  end
+
+  module M = Gmap.Make (Key)
+
+  type kv = M.b
+  type t = M.t
+
+  let make_kv (k, v) = M.B (Key.Str k, v)
+  let name = "Gmap"
+  let empty = M.empty
+  let add t (M.B (k, v)) = M.add k v t
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+
+  let union =
+    let f _ a _ = Some a in
+    M.union { M.f }
+
+  let merge (f : int -> string option -> string option -> string option) a b =
+    let f (type a) (k : a Key.t) (a : a option) (b : a option) : a option =
+      match k with Key.Str k -> f k a b | _ -> .
+    in
+    M.merge { M.f } a b
+
+  let inter _ _ = raise Bench.Unsupported
+  let diff _ _ = raise Bench.Unsupported
+end)
+
+module Hmap_bench = Bench.Make (struct
+  type kv = Hmap.binding
+  type t = Hmap.t
+
+  let make_kv (_k, v) = Hmap.B (Hmap.Key.create (), v)
+  let name = "Hmap"
+  let empty = Hmap.empty
+  let add t (Hmap.B (k, v)) = Hmap.add k v t
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+  let union _ _ = raise Bench.Unsupported
+  let merge _ _ _ = raise Bench.Unsupported
+  let inter _ _ = raise Bench.Unsupported
+  let diff _ _ = raise Bench.Unsupported
+end)
+
 module PatriciaTree_bench = Bench.Make (struct
   module M = PatriciaTree.MakeMap (struct
     type t = int
@@ -258,6 +346,9 @@ let tests =
   [
     Ptmap_bench.tests;
     CCIntMap_bench.tests;
+    Dmap_bench.tests;
+    Gmap_bench.tests;
+    Hmap_bench.tests;
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
     Colibri_intmap_bench.tests;

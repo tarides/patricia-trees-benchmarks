@@ -10,6 +10,9 @@
   qcheck
   ptmap
   containers-data
+  dmap
+  gmap
+  hmap
   patricia-tree
   popop_lib
   framac_intmap
