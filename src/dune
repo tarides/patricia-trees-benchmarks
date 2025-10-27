@@ -14,7 +14,8 @@
   gmap
   hmap
   patricia-tree
-  popop_lib
+  colibri2_popop_lib
+  colibri2_stdlib
   framac_intmap
   framac_idxmap
   framac_mergemap))

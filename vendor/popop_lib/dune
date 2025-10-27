@@ -1,7 +1,7 @@
 ; library to replace by containers
 
 (library
- (name popop_lib)
+ (name colibri2_popop_lib)
  (synopsis
   "Temporary for colibri2 (intended to be replaced by another library)")
  (libraries str unix zarith base fmt)
