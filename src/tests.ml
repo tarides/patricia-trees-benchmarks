@@ -122,6 +122,36 @@ module Colibri_intmap_bench = Bench.Make (struct
   let diff = M.diff (fun _ a _ -> Some a)
 end)
 
+module Colibri_mergemap_bench = Bench.Make (struct
+  open Colibri2_popop_lib
+
+  module Key = struct
+    type t = int
+
+    let hash = Int.hash
+    let equal = Int.equal
+    let compare = Int.compare
+    let pp = Pp.int
+    let hash_fold_t _ = assert false (* Not used *)
+  end
+
+  module M = Mergemap.Make (Key)
+
+  type kv = M.key * string
+  type t = string M.data M.t
+
+  let make_kv = Fun.id
+  let name = "Colibri2/Mergemap"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list = M.of_list
+  let of_seq _ = raise Bench.Unsupported
+  let union = M.union (fun _ a _ -> Some a)
+  let merge f = M.union_merge (fun k a b -> f k a (Some b))
+  let inter = M.inter (fun _ a _ -> Some a)
+  let diff = M.diff (fun _ a _ -> Some a)
+end)
+
 module Colibri_intmap_hash_consed_bench = Bench.Make (struct
   open Colibri2_popop_lib
 
@@ -298,6 +328,7 @@ let tests =
     Colibri_intmap_bench.tests;
     Colibri_intmap_hash_consed_bench.tests;
     Colibri_intmap_hetero_bench.tests;
+    Colibri_mergemap_bench.tests;
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
     Frama_C_mergemap_bench.tests;
