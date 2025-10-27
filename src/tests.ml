@@ -94,7 +94,7 @@ module HashconsedPatriciaTree_bench = Bench.Make (struct
 end)
 
 module Colibri_intmap_bench = Bench.Make (struct
-  open Popop_lib
+  open Colibri2_popop_lib
 
   module Key = struct
     type t = int
@@ -123,7 +123,7 @@ module Colibri_intmap_bench = Bench.Make (struct
 end)
 
 module Colibri_intmap_hash_consed_bench = Bench.Make (struct
-  open Popop_lib
+  open Colibri2_popop_lib
 
   module Key = struct
     type t = int
@@ -160,7 +160,7 @@ module Colibri_intmap_hash_consed_bench = Bench.Make (struct
 end)
 
 module Colibri_intmap_hetero_bench = Bench.Make (struct
-  open Popop_lib
+  open Colibri2_popop_lib
 
   module M =
     Intmap_hetero.Make1
@@ -181,6 +181,40 @@ module Colibri_intmap_hetero_bench = Bench.Make (struct
   let of_list _ = raise Bench.Unsupported
   let of_seq _ = raise Bench.Unsupported
   let union _ _ = raise Bench.Unsupported
+  let merge _ _ _ = raise Bench.Unsupported
+  let inter _ _ = raise Bench.Unsupported
+  let diff _ _ = raise Bench.Unsupported
+end)
+
+module Colibri_map_hetero_bench = Bench.Make (struct
+  open Colibri2_stdlib.Std
+
+  module Key = struct
+    type _ t = Str : int -> string t [@@unboxed]
+
+    let tag (type a) : a t -> int = fun (Str tag) -> tag
+
+    let equal (type a b) (a : a t) (b : b t) : (a, b) Poly.iseq =
+      let Str a, Str b = (a, b) in
+      if a = b then Poly.Eq else Poly.Neq
+  end
+
+  module M = Colibri2_stdlib.Map_hetero.MakeR (Key)
+
+  type kv = string Key.t * string
+  type t = string M.t
+
+  let make_kv (k, v) = (Key.Str k, v)
+  let name = "Colibri_int_hetero"
+  let empty = M.empty
+  let add t (k, v) = M.add k v t
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+
+  let union =
+    let union _ a _ = Some a in
+    M.union { M.union }
+
   let merge _ _ _ = raise Bench.Unsupported
   let inter _ _ = raise Bench.Unsupported
   let diff _ _ = raise Bench.Unsupported
@@ -260,6 +294,7 @@ let tests =
     CCIntMap_bench.tests;
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
+    Colibri_map_hetero_bench.tests;
     Colibri_intmap_bench.tests;
     Colibri_intmap_hash_consed_bench.tests;
     Colibri_intmap_hetero_bench.tests;
