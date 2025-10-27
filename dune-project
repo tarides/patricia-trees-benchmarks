@@ -18,8 +18,10 @@
 (package
  (name patricia-tree-benchmarks)
  (depends
+  (ocaml (= 5.3.0 ))
   bechamel
   notty
+  base
   bechamel-notty
   csv
   qcheck
