@@ -1,0 +1,17 @@
+(library
+ (name colibri2_stdlib)
+ (synopsis "Stdlib for colibri2")
+ (libraries
+  zarith
+  containers
+  colibri2_popop_lib
+  fmt
+  qcheck-core
+  calcium
+  re
+  trace.core
+  trace-tef)
+ (preprocess
+  (pps ppx_deriving.std ppx_hash ppx_inline_test))
+ (inline_tests)
+ (flags :standard -open Containers))
