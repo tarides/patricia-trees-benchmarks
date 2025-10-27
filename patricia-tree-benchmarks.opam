@@ -13,8 +13,12 @@ depends: [
   "bechamel"
   "notty"
   "bechamel-notty"
+  "csv"
   "qcheck"
   "ptmap"
+  "dmap"
+  "gmap"
+  "hmap"
   "containers-data"
   "patricia-tree"
   "odoc" {with-doc}
