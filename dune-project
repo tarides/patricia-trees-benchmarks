@@ -36,7 +36,8 @@
   qcheck-core
   calcium
   re
-  trace
+  (trace
+   (<= 0.8))
   trace-tef
   ppx_deriving
   ppx_hash
