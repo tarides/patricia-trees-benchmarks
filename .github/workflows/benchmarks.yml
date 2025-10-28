@@ -1,0 +1,30 @@
+name: Benchmarks
+
+on: [push, pull_request]
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install OCaml compiler
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5.3
+          dune-cache: true
+
+      - name: Install dependencies
+        run: |
+          opam install . --deps-only --with-test
+
+      - name: Build the benchmarks
+        run: opam exec -- dune build
+
+      - name: Run the benchmarks
+        run: opam exec -- dune exec src/main.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          path: "results.csv"

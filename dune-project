@@ -18,8 +18,10 @@
 (package
  (name patricia-tree-benchmarks)
  (depends
+  (ocaml (= 5.3.0 ))
   bechamel
   notty
+  base
   bechamel-notty
   csv
   qcheck
@@ -34,7 +36,8 @@
   qcheck-core
   calcium
   re
-  trace
+  (trace
+   (<= 0.8))
   trace-tef
   ppx_deriving
   ppx_hash
