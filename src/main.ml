@@ -68,7 +68,7 @@ let test_result_to_str ols =
       let precision = if est < 100. then 2 else if est < 1000. then 1 else 0 in
       let unit_r = unit_of_label (O.responder ols) in
       Format.asprintf "%.*f %s/run" precision est unit_r
-  | None, _ -> "unsupported"
+  | None, _ -> "-"
   | Some _, None -> "?"
 
 let output_csv results =
@@ -84,7 +84,7 @@ let output_csv results =
              name
              :: List.map
                   (fun tname ->
-                    Option.fold ~none:"?" ~some:test_result_to_str
+                    Option.fold ~none:"-" ~some:test_result_to_str
                       (Hashtbl.find_opt r tname))
                   test_names)
            results)
