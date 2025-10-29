@@ -59,19 +59,7 @@ let unit_of_label label =
          else None)
        instances)
 
-let test_result_to_str ols =
-  let module O = Analyze.OLS in
-  let predictor = List.find_index (( = ) Measure.run) (O.predictors ols) in
-  match (O.estimates ols, predictor) with
-  | Some estimates, Some i ->
-      let est = List.nth estimates i in
-      let precision = if est < 100. then 2 else if est < 1000. then 1 else 0 in
-      let unit_r = unit_of_label (O.responder ols) in
-      Format.asprintf "%.*f %s/run" precision est unit_r
-  | None, _ -> "-"
-  | Some _, None -> "?"
-
-let output_csv results =
+let output_csv ~test_result_to_str results =
   let header_row = "" :: test_names in
   List.concat_map
     (fun instance ->
@@ -89,6 +77,31 @@ let output_csv results =
                   test_names)
            results)
     instances
+
+module O = Analyze.OLS
+
+let predictor ols = List.find_index (( = ) Measure.run) (O.predictors ols)
+
+let output_csv_rsquare =
+  output_csv ~test_result_to_str:(fun ols ->
+      match (O.estimates ols, predictor ols) with
+      | Some rsquares, Some i ->
+          let rsq = List.nth rsquares i in
+          Format.asprintf "%.3f" rsq
+      | _ -> "-")
+
+let output_csv =
+  output_csv ~test_result_to_str:(fun ols ->
+      match (O.estimates ols, predictor ols) with
+      | Some estimates, Some i ->
+          let est = List.nth estimates i in
+          let precision =
+            if est < 100. then 2 else if est < 1000. then 1 else 0
+          in
+          let unit_r = unit_of_label (O.responder ols) in
+          Format.asprintf "%.*f %s/run" precision est unit_r
+      | None, _ -> "-"
+      | Some _, None -> "?")
 
 let () =
   List.iter
@@ -132,6 +145,8 @@ let () =
     results;
   let analyzed = analyze results in
   output_notty analyzed;
-  let outf = "results.csv" in
+  let outf = "results.csv" and rsquare_outf = "results-rsquare.csv" in
   Csv.save outf (output_csv analyzed);
-  Format.printf "CSV output available in %s@\n" outf
+  Csv.save rsquare_outf (output_csv_rsquare analyzed);
+  Format.printf "CSV output available in %s. R² results in %s@\n" outf
+    rsquare_outf
