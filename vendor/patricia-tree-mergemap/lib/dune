@@ -1,0 +1,4 @@
+(library
+ (name patricia_tree_mergemap)
+ (public_name patricia-tree-mergemap)
+ (libraries patricia-tree))

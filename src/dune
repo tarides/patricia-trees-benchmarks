@@ -18,4 +18,5 @@
   colibri2_stdlib
   framac_intmap
   framac_idxmap
-  framac_mergemap))
+  framac_mergemap
+  patricia-tree-mergemap))
