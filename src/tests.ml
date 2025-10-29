@@ -139,7 +139,7 @@ module PatriciaTree_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv kv = kv
-  let name = "Codex/BaseMap"
+  let name = "PatriciaTree/BaseMap"
   let empty = M.empty
   let add t (k, v) = M.add k v t
   let of_list = M.of_list
@@ -147,7 +147,7 @@ module PatriciaTree_bench = Bench.Make (struct
   let union a b = M.idempotent_union (fun _ a _ -> a) a b
   let merge f a b = M.slow_merge f a b
   let inter a b = M.idempotent_inter (fun _ a _ -> a) a b
-  let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
+  let diff a b = M.difference (fun _ _ _ -> None) a b
 end)
 
 module HashconsedPatriciaTree_bench = Bench.Make (struct
@@ -170,7 +170,7 @@ module HashconsedPatriciaTree_bench = Bench.Make (struct
   type t = string M.t
 
   let make_kv kv = kv
-  let name = "Codex/HashConsedMap"
+  let name = "PatriciaTree/HashConsedMap"
   let empty = M.empty
   let add t (k, v) = M.add k v t
   let of_list = M.of_list
@@ -178,7 +178,25 @@ module HashconsedPatriciaTree_bench = Bench.Make (struct
   let union a b = M.idempotent_union (fun _ a _ -> a) a b
   let merge f a b = M.slow_merge f a b
   let inter a b = M.idempotent_inter (fun _ a _ -> a) a b
-  let diff a b = M.symmetric_difference (fun _ _ _ -> None) a b
+  let diff a b = M.difference (fun _ _ _ -> None) a b
+end)
+
+module PatriciaTree_Mergemap_bench = Bench.Make (struct
+  module M = Patricia_tree_mergemap.Mergemap.Make (Int)
+
+  type kv = int * string
+  type t = string M.t
+
+  let make_kv kv = kv
+  let name = "PatriciaTree/Mergemap"
+  let empty = M.empty
+  let add t (k, v) = M.add k v t
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+  let union a b = M.union (fun _ a _ -> a) a b
+  let merge = M.merge
+  let inter a b = M.inter (fun _ a _ -> a) a b
+  let diff a b = M.diffq (fun _ _ _ -> None) a b
 end)
 
 module Colibri_intmap_bench = Bench.Make (struct
@@ -415,6 +433,7 @@ let tests =
     Hmap_bench.tests;
     PatriciaTree_bench.tests;
     HashconsedPatriciaTree_bench.tests;
+    PatriciaTree_Mergemap_bench.tests;
     Colibri_map_hetero_bench.tests;
     Colibri_intmap_bench.tests;
     Colibri_intmap_hash_consed_bench.tests;
