@@ -51,20 +51,15 @@ let analyze results =
 let analyze =
   List.map (fun (name, (r, unsupported)) -> (name, analyze r, unsupported))
 
-let unit_of_label label =
-  Option.value ~default:label
-    (List.find_map
-       (fun instance ->
-         if Measure.label instance = label then Some (Measure.unit instance)
-         else None)
-       instances)
-
-let output_csv ~test_result_to_str results =
+let output_csv ~unit_format ~test_result_to_str results =
   let header_row = "" :: test_names in
   List.concat_map
     (fun instance ->
       let instance_label = Measure.label instance in
-      [ "# " ^ instance_label ]
+      [
+        Format.asprintf "# %s (%s)" instance_label
+          (unit_format (Measure.unit instance));
+      ]
       :: header_row
       :: List.map
            (fun (name, analyzed, _unsupported) ->
@@ -83,7 +78,9 @@ module O = Analyze.OLS
 let predictor ols = List.find_index (( = ) Measure.run) (O.predictors ols)
 
 let output_csv_rsquare =
-  output_csv ~test_result_to_str:(fun ols ->
+  output_csv
+    ~unit_format:(fun _unit -> "R²")
+    ~test_result_to_str:(fun ols ->
       match (O.estimates ols, predictor ols) with
       | Some rsquares, Some i ->
           let rsq = List.nth rsquares i in
@@ -91,15 +88,16 @@ let output_csv_rsquare =
       | _ -> "-")
 
 let output_csv =
-  output_csv ~test_result_to_str:(fun ols ->
+  output_csv
+    ~unit_format:(fun instance_unit -> Format.asprintf "%s/run" instance_unit)
+    ~test_result_to_str:(fun ols ->
       match (O.estimates ols, predictor ols) with
       | Some estimates, Some i ->
           let est = List.nth estimates i in
           let precision =
             if est < 100. then 2 else if est < 1000. then 1 else 0
           in
-          let unit_r = unit_of_label (O.responder ols) in
-          Format.asprintf "%.*f %s/run" precision est unit_r
+          Format.asprintf "%.*f" precision est
       | None, _ -> "-"
       | Some _, None -> "?")
 
