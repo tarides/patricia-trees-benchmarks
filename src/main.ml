@@ -33,9 +33,7 @@ let test_names =
     (List.concat_map (fun (_, test) -> Test.names test) tests)
 
 let benchmark () =
-  let cfg =
-    Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
-  in
+  let cfg = Benchmark.cfg () in
   List.map
     (fun (name, tests) ->
       (name, benchmark_all_with_unsupported cfg instances tests))
