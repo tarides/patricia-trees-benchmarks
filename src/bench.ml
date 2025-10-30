@@ -129,58 +129,49 @@ end = struct
   let random_tree () = array_rand random_trees
 
   let t_construct_pos_low_ordered =
-    make_test
-      "Construction with positive, <ordered keys close to '0' using 'add' and \
-       'empty'."
-    @@ fun () -> List.fold_left Impl.add Impl.empty ordered_kv_list
+    make_test "Constr: pos, ord, small" @@ fun () ->
+    List.fold_left Impl.add Impl.empty ordered_kv_list
 
   let t_construct_pos_high_ordered =
-    make_test
-      "Construction with positive, >ordered keys close to 'max_int using 'add' \
-       and 'empty'."
-    @@ fun () -> List.fold_left Impl.add Impl.empty ordered_high_kv_list
+    make_test "Constr: pos, ord, large" @@ fun () ->
+    List.fold_left Impl.add Impl.empty ordered_high_kv_list
 
   let t_construct_mixed =
     let data =
       List.map (fun (i, l) -> (i, kvs_of_keys l)) mixed_order_key_lists
     in
-    make_indexed
-      "Construction with small positive unordered keys and part of random keys \
-       a using 'add' and 'empty'."
-      ~fmt:"%s (%d%% random)" (List.map fst data)
+    make_indexed "Constr" ~fmt:"%s: %d%% random" (List.map fst data)
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let t_of_list =
-    make_test "Construction with 'of_list'" @@ fun () ->
-    Impl.of_list random_kv_list
+    make_test "Constr of_list" @@ fun () -> Impl.of_list random_kv_list
 
   let t_of_seq =
-    make_test "Construction with 'of_seq" @@ fun () -> Impl.of_seq random_kv_seq
+    make_test "Constr: of_seq" @@ fun () -> Impl.of_seq random_kv_seq
 
   let t_union =
-    make_test "Set operations: union" @@ fun () ->
+    make_test "Set op: union" @@ fun () ->
     Impl.union (random_tree ()) (random_tree ())
 
   let t_merge =
-    make_test "Set operations: merge (left biased)" @@ fun () ->
+    make_test "Set op: merge" @@ fun () ->
     Impl.merge
       (fun _ a b -> if Option.is_none a then b else a)
       (random_tree ()) (random_tree ())
 
   let t_inter =
-    make_test "Set operations: inter" @@ fun () ->
+    make_test "Set op: inter" @@ fun () ->
     Impl.inter (random_tree ()) (random_tree ())
 
   let t_diff =
-    make_test "Set operations: diff" @@ fun () ->
+    make_test "Set op: diff" @@ fun () ->
     Impl.diff (random_tree ()) (random_tree ())
 
   let t_hashconsing =
     let data =
       List.map (fun (i, keys) -> (i, kvs_of_keys keys)) mixed_shared_key_lists
     in
-    make_indexed "Construction from shared keys, favorable to hash-consing"
-      ~fmt:"%s (%d%% random)" (List.map fst data)
+    make_indexed "Constr: shared" ~fmt:"%s, %d%% random" (List.map fst data)
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let tests =
