@@ -144,7 +144,7 @@ end = struct
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let t_of_list =
-    make_test "Constr of_list" @@ fun () -> Impl.of_list random_kv_list
+    make_test "Constr: of_list" @@ fun () -> Impl.of_list random_kv_list
 
   let t_of_seq =
     make_test "Constr: of_seq" @@ fun () -> Impl.of_seq random_kv_seq
@@ -171,7 +171,7 @@ end = struct
     let data =
       List.map (fun (i, keys) -> (i, kvs_of_keys keys)) mixed_shared_key_lists
     in
-    make_indexed "Constr: shared" ~fmt:"%s, %d%% random" (List.map fst data)
+    make_indexed "Shared" ~fmt:"%s: %d%% random" (List.map fst data)
     @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
 
   let tests =
