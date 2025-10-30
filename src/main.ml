@@ -39,7 +39,9 @@ let minor_allocated_precise =
   let ext = Measure.register (module Ext) in
   Measure.instance (module Ext) ext
 
-let instances = Instance.[ promoted; minor_allocated_precise; monotonic_clock_us ]
+let instances =
+  Instance.[ monotonic_clock_us; minor_allocated_precise; promoted ]
+
 let tests = Bench.merge Tests.tests
 
 let test_names =
