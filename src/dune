@@ -19,4 +19,5 @@
   framac_intmap
   framac_idxmap
   framac_mergemap
-  patricia-tree-mergemap))
+  patricia-tree-mergemap
+  binsec_base))

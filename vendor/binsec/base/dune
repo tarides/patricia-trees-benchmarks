@@ -1,0 +1,3 @@
+(library
+ (name binsec_base)
+ (libraries zarith))
