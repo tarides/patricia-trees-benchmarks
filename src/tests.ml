@@ -424,6 +424,31 @@ module Frama_C_mergemap_bench = Bench.Make (struct
   let diff = M.diffq (fun _ _ _ -> None)
 end)
 
+module Binsec_hmap_bench = Bench.Make (struct
+  open Binsec_base
+
+  module M = Hmap.Make (struct
+    type t = int
+
+    let hash = Fun.id
+    let compare = Int.compare
+  end)
+
+  type kv = int * string
+  type t = string M.t
+
+  let make_kv = Fun.id
+  let name = "3. Binsec/Hmap"
+  let empty = M.empty
+  let add m (k, v) = M.add k v m
+  let of_list _ = raise Bench.Unsupported
+  let of_seq _ = raise Bench.Unsupported
+  let union = M.union_eq (fun _ x _ -> x)
+  let merge _ = raise Bench.Unsupported
+  let inter _ = raise Bench.Unsupported
+  let diff _ = raise Bench.Unsupported
+end)
+
 (** Implementation names are prefixed with their use case:
     - 1. Intmap non-generic
     - 2. Intmap with generic keys
@@ -449,4 +474,5 @@ let tests =
     Frama_C_intmap_bench.tests;
     Frama_C_idxmap_bench.tests;
     Frama_C_mergemap_bench.tests;
+    Binsec_hmap_bench.tests;
   ]
