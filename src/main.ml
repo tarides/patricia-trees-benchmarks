@@ -25,7 +25,23 @@ let monotonic_clock_us =
   let ext = Measure.register (module Ext) in
   Measure.instance (module Ext) ext
 
-let instances = Instance.[ promoted; minor_allocated; monotonic_clock_us ]
+let minor_allocated_precise =
+  let module Ext = struct
+    type witness = unit
+
+    let load () = ()
+    let unload () = ()
+    let make () = ()
+    let get () = Gc.minor_words ()
+    let label () = "minor-allocated"
+    let unit () = "word"
+  end in
+  let ext = Measure.register (module Ext) in
+  Measure.instance (module Ext) ext
+
+let instances =
+  Instance.[ monotonic_clock_us; minor_allocated_precise; promoted ]
+
 let tests = Bench.merge Tests.tests
 
 let test_names =
@@ -33,9 +49,7 @@ let test_names =
     (List.concat_map (fun (_, test) -> Test.names test) tests)
 
 let benchmark () =
-  let cfg =
-    Benchmark.cfg ~limit:2000 ~stabilize:true ~quota:(Time.second 0.5) ()
-  in
+  let cfg = Benchmark.cfg () in
   List.map
     (fun (name, tests) ->
       (name, benchmark_all_with_unsupported cfg instances tests))
