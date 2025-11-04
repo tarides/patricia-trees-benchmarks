@@ -154,6 +154,14 @@ end = struct
     let ordered_high_trees = mk ordered_high_kv_list ~size () in
     (* Trees with few elements. *)
     let small_random_trees = mk mk_random_kv_list ~size:small_size () in
+    (* Two equal trees except for one element *)
+    let equal_except_one_trees =
+      let aux _ =
+        let xs = ordered_kv_list ~size () in
+        (mk_tree xs, mk_tree (List.tl xs))
+      in
+      Array.(split @@ init 20 aux)
+    in
     let data =
       [
         ("random", (random_trees, random_trees));
@@ -161,6 +169,7 @@ end = struct
         ("disjoint", (ordered_low_trees, ordered_high_trees));
         ("large and small", (random_trees, small_random_trees));
         ("ordered and small random", (ordered_low_trees, small_random_trees));
+        ("equal except one element", equal_except_one_trees);
       ]
     in
     make_indexed ("Set: " ^ name) ~fmt:"%s (%s)" data
