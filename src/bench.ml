@@ -176,14 +176,14 @@ end = struct
     @@ fun (trees_l, trees_r) () ->
     ignore (f (array_rand trees_l) (array_rand trees_r))
 
-  let t_union = make_set_op "Set op: union" Impl.union
+  let t_union = make_set_op "union" Impl.union
 
   let t_merge =
-    make_set_op "Set op: merge"
+    make_set_op "merge"
       (Impl.merge (fun _ a b -> if Option.is_none a then b else a))
 
-  let t_inter = make_set_op "Set op: inter" Impl.inter
-  let t_diff = make_set_op "Set op: diff" Impl.diff
+  let t_inter = make_set_op "inter" Impl.inter
+  let t_diff = make_set_op "diff" Impl.diff
 
   let t_hashconsing =
     let data =
