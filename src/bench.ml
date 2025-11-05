@@ -12,7 +12,7 @@ let state = Random.get_state ()
 let array_rand ar = ar.(Gen.int_bound (Array.length ar - 1) state)
 let tree_size = 10000
 let value_size = 100
-let ordered_key_list = List.init tree_size (fun i -> i)
+let ordered_key_list ?(size = tree_size) () = List.init size (fun i -> i)
 
 let random_key_list ?(size = tree_size) () =
   List.init size (fun _ -> Gen.int state)
@@ -23,10 +23,12 @@ let random_key_value_list ?size () =
   List.map key_value_of_key (random_key_list ?size ())
 
 let random_key_value_seq = List.to_seq (random_key_value_list ())
-let ordered_key_value_list = List.map key_value_of_key ordered_key_list
 
-let ordered_high_key_value_list =
-  List.init tree_size (fun i -> (Int.max_int - i, string_of_int i))
+let ordered_key_value_list ?size () =
+  List.map key_value_of_key (ordered_key_list ?size ())
+
+let ordered_high_key_value_list ?(size = tree_size) () =
+  List.init size (fun i -> (Int.max_int - i, string_of_int i))
 
 let mixed_order_key_lists =
   let mk_mixed ratio =
@@ -34,7 +36,7 @@ let mixed_order_key_lists =
         match Gen.(option ~ratio int state) with Some r -> r | None -> i)
   in
   [
-    (0, ordered_key_list);
+    (0, ordered_key_list ());
     (1, mk_mixed 0.01);
     (5, mk_mixed 0.05);
     (25, mk_mixed 0.25);
@@ -97,51 +99,44 @@ end = struct
   let make_test op_name call =
     [ { op_name; test = Test.make ~name:Impl.name (Staged.stage @@ call) } ]
 
-  (* let make_tests op_name ?(fmt : Test.fmt_grouped = "%s.%s") tests = *)
-  (*   let tests = *)
-  (*     List.map (fun (name, call) -> Test.make ~name (Staged.stage call)) tests *)
-  (*   in *)
-  (*   { op_name; test = Test.make_grouped ~name:Impl.name ~fmt tests } *)
-
   let make_indexed op_name ~fmt args call =
     let f arg = Staged.stage (call arg) in
-    List.map
-      (fun key ->
-        let op_name = Format.asprintf fmt op_name key in
-        { op_name; test = Test.make ~name:Impl.name (f key) })
-      args
+    let mk_test (variation_name, dataset) =
+      let op_name = Format.asprintf fmt op_name variation_name in
+      { op_name; test = Test.make ~name:Impl.name (f dataset) }
+    in
+    List.map mk_test args
 
   let mk_random_kv_list ?size () =
     List.map Impl.make_kv (random_key_value_list ?size ())
 
   let random_kv_list = mk_random_kv_list ()
   let random_kv_seq = List.to_seq (mk_random_kv_list ())
-  let ordered_kv_list = List.map Impl.make_kv ordered_key_value_list
-  let ordered_high_kv_list = List.map Impl.make_kv ordered_high_key_value_list
+
+  let ordered_kv_list ?size () =
+    List.map Impl.make_kv (ordered_key_value_list ?size ())
+
+  let ordered_high_kv_list ?size () =
+    List.map Impl.make_kv (ordered_high_key_value_list ?size ())
+
   let mk_tree = List.fold_left Impl.add Impl.empty
   let kvs_of_keys = List.map (fun k -> Impl.make_kv (k, ""))
 
-  let random_trees =
-    Array.init 10 (fun _ -> mk_tree (mk_random_kv_list ~size:1000 ()))
-
-  (* Quickly return a tree from a collection of pre-built trees. These trees
-     are smaller than [tree_size]. *)
-  let random_tree () = array_rand random_trees
-
   let t_construct_pos_low_ordered =
     make_test "Constr: pos, ord, small" @@ fun () ->
-    List.fold_left Impl.add Impl.empty ordered_kv_list
+    List.fold_left Impl.add Impl.empty (ordered_kv_list ())
 
   let t_construct_pos_high_ordered =
+    let kvs = ordered_high_kv_list () in
     make_test "Constr: pos, ord, large" @@ fun () ->
-    List.fold_left Impl.add Impl.empty ordered_high_kv_list
+    List.fold_left Impl.add Impl.empty kvs
 
   let t_construct_mixed =
     let data =
       List.map (fun (i, l) -> (i, kvs_of_keys l)) mixed_order_key_lists
     in
-    make_indexed "Constr" ~fmt:"%s: %d%% random" (List.map fst data)
-    @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
+    make_indexed "Constr" ~fmt:"%s: %d%% random" data @@ fun kvs () ->
+    List.fold_left Impl.add Impl.empty kvs
 
   let t_of_list =
     make_test "Constr: of_list" @@ fun () -> Impl.of_list random_kv_list
@@ -149,30 +144,53 @@ end = struct
   let t_of_seq =
     make_test "Constr: of_seq" @@ fun () -> Impl.of_seq random_kv_seq
 
-  let t_union =
-    make_test "Set op: union" @@ fun () ->
-    Impl.union (random_tree ()) (random_tree ())
+  let make_set_op name f =
+    let mk f ?size () = Array.init 20 (fun _ -> mk_tree (f ?size ())) in
+    let size = 1000 and small_size = 50 in
+    let random_trees = mk mk_random_kv_list ~size () in
+    (* Trees with ordered values close to 0. *)
+    let ordered_low_trees = mk ordered_kv_list ~size () in
+    (* Trees with ordered values close to max_int. *)
+    let ordered_high_trees = mk ordered_high_kv_list ~size () in
+    (* Trees with few elements. *)
+    let small_random_trees = mk mk_random_kv_list ~size:small_size () in
+    (* Two equal trees except for one element *)
+    let equal_except_one_trees =
+      let aux _ =
+        let xs = ordered_kv_list ~size () in
+        (mk_tree xs, mk_tree (List.tl xs))
+      in
+      Array.(split @@ init 20 aux)
+    in
+    let data =
+      [
+        ("random", (random_trees, random_trees));
+        ("ordered", (ordered_low_trees, ordered_low_trees));
+        ("disjoint", (ordered_low_trees, ordered_high_trees));
+        ("large and small", (random_trees, small_random_trees));
+        ("ordered and small random", (ordered_low_trees, small_random_trees));
+        ("equal except one element", equal_except_one_trees);
+      ]
+    in
+    make_indexed ("Set: " ^ name) ~fmt:"%s (%s)" data
+    @@ fun (trees_l, trees_r) () ->
+    ignore (f (array_rand trees_l) (array_rand trees_r))
+
+  let t_union = make_set_op "union" Impl.union
 
   let t_merge =
-    make_test "Set op: merge" @@ fun () ->
-    Impl.merge
-      (fun _ a b -> if Option.is_none a then b else a)
-      (random_tree ()) (random_tree ())
+    make_set_op "merge"
+      (Impl.merge (fun _ a b -> if Option.is_none a then b else a))
 
-  let t_inter =
-    make_test "Set op: inter" @@ fun () ->
-    Impl.inter (random_tree ()) (random_tree ())
-
-  let t_diff =
-    make_test "Set op: diff" @@ fun () ->
-    Impl.diff (random_tree ()) (random_tree ())
+  let t_inter = make_set_op "inter" Impl.inter
+  let t_diff = make_set_op "diff" Impl.diff
 
   let t_hashconsing =
     let data =
       List.map (fun (i, keys) -> (i, kvs_of_keys keys)) mixed_shared_key_lists
     in
-    make_indexed "Shared" ~fmt:"%s: %d%% random" (List.map fst data)
-    @@ fun i () -> List.fold_left Impl.add Impl.empty (List.assoc i data)
+    make_indexed "Shared" ~fmt:"%s: %d%% random" data @@ fun kvs () ->
+    List.fold_left Impl.add Impl.empty kvs
 
   let tests =
     List.concat

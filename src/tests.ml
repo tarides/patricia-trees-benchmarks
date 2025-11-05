@@ -444,7 +444,7 @@ module Binsec_hmap_bench = Bench.Make (struct
   let of_list _ = raise Bench.Unsupported
   let of_seq _ = raise Bench.Unsupported
   let union = M.union_eq (fun _ x _ -> x)
-  let merge _ = raise Bench.Unsupported
+  let merge _ _ _ = raise Bench.Unsupported
   let inter _ = raise Bench.Unsupported
   let diff _ = raise Bench.Unsupported
 end)
